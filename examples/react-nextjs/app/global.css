@@ -1,0 +1,51 @@
+body {
+  margin: 1rem auto;
+  padding: 0 0.5rem;
+  max-width: 800px;
+  color: #444;
+  font:
+    1.2rem/1.62 "atkinson hyperlegible",
+    -apple-system,
+    BlinkMacSystemFont,
+    "avenir next",
+    avenir,
+    "segoe ui",
+    "helvetica neue",
+    helvetica,
+    cantarell,
+    ubuntu,
+    roboto,
+    noto,
+    arial,
+    sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0d1117;
+    color: #c9d1d9;
+  }
+
+  a:link {
+    color: #58a6ff;
+  }
+
+  a:visited {
+    color: #8e96f0;
+  }
+}
+
+bottom-sheet {
+  --sheet-background: #f9f9f9;
+}
+
+bottom-sheet h2 {
+  margin: 0.5em 0;
+  text-align: center;
+}

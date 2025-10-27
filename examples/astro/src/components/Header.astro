@@ -1,0 +1,162 @@
+<header>
+  <nav>
+    <a href=`${import.meta.env.BASE_URL}/`>Home</a>
+    <span class="title">pure-web-bottom-sheet</span>
+    <div>
+      <a
+        href="https://github.com/viliket/pure-web-bottom-sheet"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="GitHub project"
+        title="View on GitHub"
+        class="github-link"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill="currentColor"
+            d="M12 2C6.48 2 2 6.58 2 12.26c0 4.52 2.87 8.36 6.84 9.72.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.62-3.37-1.36-3.37-1.36-.45-1.17-1.1-1.48-1.1-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.65.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.29.1-2.68 0 0 .84-.28 2.75 1.05a9.38 9.38 0 0 1 2.5-.34c.85.004 1.71.12 2.5.34 1.91-1.33 2.75-1.05 2.75-1.05.55 1.39.2 2.42.1 2.68.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.07.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z"
+          ></path>
+        </svg>
+      </a>
+      <button
+        id="theme-toggle"
+        aria-label="Appearance: Device default"
+        title="Appearance: Device default"
+        type="button"
+      >
+        <span
+          class="theme-option"
+          data-theme="light dark"
+          data-label="Device default"
+          aria-hidden="true">🌓</span
+        >
+        <span
+          class="theme-option"
+          data-theme="dark"
+          data-label="Dark"
+          aria-hidden="true">🌙</span
+        >
+        <span
+          class="theme-option"
+          data-theme="light"
+          data-label="Light"
+          aria-hidden="true">🌞</span
+        >
+      </button>
+    </div>
+  </nav>
+</header>
+
+<style>
+  header {
+    background: light-dark(#f8fafc, #212426);
+    border-bottom: 1px solid light-dark(#e5e7eb, #2f2f2f);
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+  }
+  nav {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  nav a {
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  nav a:hover {
+    text-decoration: underline;
+  }
+  .title {
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: light-dark(#0f172a, #f8fafc);
+    letter-spacing: 0.02em;
+  }
+  nav a.github-link {
+    line-height: 1;
+    display: inline-block;
+  }
+  nav a.github-link:not(:hover) {
+    color: black;
+  }
+  nav a.github-link:hover {
+    text-decoration: none;
+  }
+  nav a.github-link svg {
+    vertical-align: middle;
+  }
+</style>
+
+<style is:global>
+  .theme-option {
+    display: none;
+  }
+  html[data-theme="light dark"] .theme-option[data-theme="light dark"],
+  html[data-theme="dark"] .theme-option[data-theme="dark"],
+  html[data-theme="light"] .theme-option[data-theme="light"] {
+    display: inline;
+  }
+
+  #theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: inherit;
+    padding: 0.1em;
+    border-radius: 50%;
+    transition: background 0.2s;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1/1;
+  }
+  #theme-toggle:hover {
+    background: light-dark(#e0e7ef, #1e293b);
+  }
+</style>
+
+<script>
+  const html = document.documentElement;
+  const themeToggle = document.getElementById("theme-toggle");
+  const themeOptions =
+    themeToggle?.querySelectorAll<HTMLElement>(".theme-option");
+
+  if (themeToggle && themeOptions?.length) {
+    const themes = Array.from(themeOptions).map((option) => ({
+      name: option.dataset.theme,
+      label: option.dataset.label,
+    }));
+
+    function setTheme(theme: string) {
+      const option = themes.find((t) => t.name === theme);
+      html.setAttribute("data-theme", theme);
+      localStorage.setItem("theme", theme);
+      const labelAttributeValue = `Appearance: ${option?.label}`;
+      themeToggle?.setAttribute("aria-label", labelAttributeValue);
+      themeToggle?.setAttribute("title", labelAttributeValue);
+    }
+
+    let theme = localStorage.getItem("theme") || themes[0].name;
+    if (theme) {
+      setTheme(theme);
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const idx = themes.findIndex((t) => t.name === theme);
+      theme = themes[(idx + 1) % themes.length].name;
+      if (theme) setTheme(theme);
+    });
+  }
+</script>

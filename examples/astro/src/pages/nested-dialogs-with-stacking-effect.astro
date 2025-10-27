@@ -1,0 +1,334 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import DummyContent from "../components/DummyContent.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+import Header from "../components/Header.astro";
+---
+
+<BaseLayout>
+  <div class="root">
+    <Header />
+    <main>
+      <section>
+        <h1>Nested dialogs with stacking-effect</h1>
+        <p>
+          This example shows multiple nested bottom sheets with a stacking
+          effect powered by CSS scroll-driven animations.<br />
+          <strong>Note:</strong> Requires browser support for CSS scroll-driven animations
+          (supported in Chrome and iOS Safari 26+).
+        </p>
+        <p>
+          <button id="open-modal-1">Open modal 1</button>
+        </p>
+        <p>
+          Note: This example uses CSS transitions on CSS custom properties
+          during the dialog opening transitions which has a performance cost
+          since custom property transitions are not run on the compositor but on
+          the main thread. This can cause jank on lower-end devices during the
+          opening transition.
+        </p>
+      </section>
+      <DummyContent />
+
+      <bottom-sheet-dialog-manager class="level-1">
+        <dialog id="bottom-sheet-dialog-1">
+          <bottom-sheet
+            class="example"
+            nested-scroll
+            nested-scroll-optimization
+            swipe-to-dismiss
+            tabindex="0"
+          >
+            <template shadowrootmode="open">
+              <Fragment set:html={bottomSheetTemplate} />
+            </template>
+
+            {/* Snap points */}
+            <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+            <div slot="header">
+              <h2>Modal 1</h2>
+            </div>
+
+            <button id="open-modal-2">Open modal 2</button>
+
+            <DummyContent />
+          </bottom-sheet>
+        </dialog>
+      </bottom-sheet-dialog-manager>
+
+      <bottom-sheet-dialog-manager class="level-2">
+        <dialog id="bottom-sheet-dialog-2">
+          <bottom-sheet
+            class="example"
+            nested-scroll
+            expand-to-scroll
+            swipe-to-dismiss
+            tabindex="0"
+          >
+            <template shadowrootmode="open">
+              <Fragment set:html={bottomSheetTemplate} />
+            </template>
+
+            {/* Snap points */}
+            <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+            <div slot="header">
+              <h2>Modal 2</h2>
+            </div>
+
+            <button id="open-modal-3">Open modal 3</button>
+
+            <DummyContent />
+          </bottom-sheet>
+        </dialog>
+      </bottom-sheet-dialog-manager>
+
+      <bottom-sheet-dialog-manager class="level-3">
+        <dialog id="bottom-sheet-dialog-3">
+          <bottom-sheet
+            class="example"
+            nested-scroll
+            expand-to-scroll
+            swipe-to-dismiss
+            tabindex="0"
+          >
+            <template shadowrootmode="open">
+              <Fragment set:html={bottomSheetTemplate} />
+            </template>
+
+            {/* Snap points */}
+            <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+            <div slot="header">
+              <h2>Modal 3</h2>
+            </div>
+
+            <DummyContent />
+          </bottom-sheet>
+        </dialog>
+      </bottom-sheet-dialog-manager>
+    </main>
+  </div>
+</BaseLayout>
+
+<style>
+  :root {
+    --dialog-scale-factor: 0.97;
+    --body-scale-factor: 0.95;
+    --transition-duration: 0.5s;
+    --transition-timing: ease-out;
+    @supports (timeline-scope: none) {
+      timeline-scope:
+        --sheet-timeline-1, --sheet-timeline-2, --sheet-timeline-3;
+    }
+    background: light-dark(black, #232323);
+  }
+
+  @property --root-dialog-open {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0;
+  }
+
+  @property --parent-dialog-open {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0;
+  }
+
+  @property --dialog-open {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0;
+  }
+
+  :root:has(#bottom-sheet-dialog-1[open]) {
+    --dialog-open-1: 1;
+    --root-dialog-open: var(--dialog-open-1);
+  }
+
+  :root:has(#bottom-sheet-dialog-2[open]) {
+    --dialog-open-2: 1;
+  }
+
+  :root:has(#bottom-sheet-dialog-3[open]) {
+    --dialog-open-3: 1;
+  }
+
+  /* Prevent document scrolling and "pull-to-refresh" behavior when dialog is open */
+  :root:has(dialog[open]) {
+    overscroll-behavior: none;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    max-width: none;
+    transition-property: --root-dialog-open;
+    transition-duration: var(--transition-duration);
+    transition-timing-function: var(--transition-timing);
+    background: inherit;
+  }
+
+  .root > main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 0.5rem;
+  }
+
+  .root {
+    transform-origin: top center;
+    background: canvas;
+    min-height: 100dvh;
+    overflow: clip;
+    @supports ((animation-timeline: scroll()) and (animation-range: 0% 100%)) {
+      animation: shrink-body linear forwards;
+      animation-timeline: --sheet-timeline-1;
+      animation-composition: accumulate;
+    }
+  }
+
+  bottom-sheet.example {
+    h2 {
+      margin: 0.5em 0;
+      text-align: center;
+    }
+  }
+
+  bottom-sheet-dialog-manager {
+    transition-property: --dialog-open, --parent-dialog-open;
+    transition-duration: var(--transition-duration);
+    transition-timing-function: var(--transition-timing);
+
+    &:has(dialog[open]) {
+      --dialog-open: 1;
+    }
+  }
+
+  bottom-sheet-dialog-manager dialog[open] {
+    transform-origin: top center;
+    transition:
+      scale var(--transition-duration) var(--transition-timing),
+      translate var(--transition-duration) var(--transition-timing),
+      overlay allow-discrete var(--transition-duration) var(--transition-timing),
+      display allow-discrete
+        var(--display-transition-duration, var(--transition-duration))
+        var(--transition-timing);
+  }
+
+  @supports ((animation-timeline: scroll()) and (animation-range: 0% 100%)) {
+    dialog {
+      timeline-scope: --sheet-timeline;
+
+      @container not style(--parent-dialog-open: 0) {
+        animation: shrink-dialog linear forwards;
+        animation-timeline: var(--parent-scroll-timeline-name);
+      }
+
+      &::backdrop {
+        animation: fade-in linear forwards;
+        animation-timeline: --sheet-timeline;
+        animation-range-end: 100vh;
+      }
+    }
+
+    bottom-sheet-dialog-manager.level-1 {
+      --parent-dialog-open: var(--dialog-open-2);
+      --parent-scroll-timeline-name: --sheet-timeline-2;
+
+      bottom-sheet {
+        scroll-timeline-name: --sheet-timeline-1, --sheet-timeline;
+      }
+    }
+
+    bottom-sheet-dialog-manager.level-2 {
+      --parent-dialog-open: var(--dialog-open-3);
+      --parent-scroll-timeline-name: --sheet-timeline-3;
+
+      bottom-sheet {
+        scroll-timeline-name: --sheet-timeline-2, --sheet-timeline;
+      }
+    }
+
+    bottom-sheet-dialog-manager.level-3 {
+      --parent-dialog-open: 0;
+
+      bottom-sheet {
+        scroll-timeline-name: --sheet-timeline-3, --sheet-timeline;
+      }
+    }
+  }
+
+  dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+
+  @keyframes shrink-dialog {
+    to {
+      scale: calc(
+        100% * var(--dialog-scale-factor) * var(--parent-dialog-open) + 100% *
+          (1 - var(--parent-dialog-open))
+      );
+      translate: 0
+        calc(
+          (1 - var(--dialog-scale-factor)) / var(--dialog-scale-factor) *
+            -50vh * var(--parent-dialog-open)
+        );
+    }
+  }
+
+  @keyframes shrink-body {
+    to {
+      scale: calc(
+        100% * var(--body-scale-factor) * var(--root-dialog-open) + 100% *
+          (1 - var(--root-dialog-open))
+      );
+      translate: 0
+        calc(
+          (1 - var(--body-scale-factor)) / var(--body-scale-factor) * 50vw *
+            var(--root-dialog-open)
+        );
+      border-radius: calc(1rem * var(--root-dialog-open));
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: calc(1 * var(--dialog-open));
+    }
+  }
+</style>
+
+<script>
+  import { registerSheetElements } from "pure-web-bottom-sheet";
+  registerSheetElements();
+
+  const openModal1Button = document.getElementById("open-modal-1");
+  const openModal2Button = document.getElementById("open-modal-2");
+  const openModal3Button = document.getElementById("open-modal-3");
+  const dialog1 = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog-1",
+  );
+  const dialog2 = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog-2",
+  );
+  const dialog3 = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog-3",
+  );
+
+  openModal1Button?.addEventListener("click", () => {
+    dialog1?.showModal();
+  });
+
+  openModal2Button?.addEventListener("click", () => {
+    dialog2?.showModal();
+  });
+
+  openModal3Button?.addEventListener("click", () => {
+    dialog3?.showModal();
+  });
+</script>

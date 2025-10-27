@@ -1,0 +1,318 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+import DummyContent from "../components/DummyContent.astro";
+import SheetConfigPanel from "../components/SheetConfigPanel.astro";
+---
+
+<Layout>
+  <section>
+    <h1>Chat (On-screen keyboard avoidance)</h1>
+    <p>This example demonstrates keyboard avoidance in a chat interface.</p>
+    <p>
+      <button id="open-modal">Open sheet as modal</button>
+      <button id="open-nonmodal">Open sheet as non-modal</button>
+    </p>
+    <SheetConfigPanel bottomSheetSelector="bottom-sheet.example" />
+    <p>
+      This example uses the VirtualKeyboard API and sets <code
+        >navigator.<wbr />virtualKeyboard.<wbr />overlaysContent = true</code
+      >. The bottom sheet leverages the <code>keyboard-inset-bottom</code> CSS environment
+      variable to adjust its height and bottom margin automatically.
+    </p>
+    <p>
+      As a fallback for browsers like Firefox that do not support the
+      VirtualKeyboard API, the <code>interactive-widget=resizes-content</code> attribute
+      is set on the <code>&lt;meta name="viewport"&gt;</code> element.
+    </p>
+    <p>
+      On iOS Safari, which supports neither method, the bottom sheet listens for <code
+        >window.visualViewport</code
+      > resize events and updates the <code>--sw-keyboard-height</code> CSS custom
+      property to adjust its height.
+    </p>
+  </section>
+  <DummyContent />
+  <bottom-sheet-dialog-manager>
+    <dialog id="bottom-sheet-dialog">
+      <bottom-sheet class="example" nested-scroll swipe-to-dismiss>
+        <template shadowrootmode="open">
+          <Fragment set:html={bottomSheetTemplate} />
+        </template>
+
+        {
+          /* 
+          Setting the snap point to 50% of the large viewport height so that when
+          the on-screen keyboard is open, the sheet is at least this tall
+          */
+        }
+        <div slot="snap" style="--snap: 50lvh" class="initial"></div>
+
+        <div class="comments-header" slot="header">
+          <button
+            class="close-btn"
+            aria-label="Close"
+            id="close-modal"
+            autofocus
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+            >
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <h2>Comments</h2>
+        </div>
+        <div slot="footer">
+          <form class="comment-input" id="comment-form">
+            <input
+              type="text"
+              id="comment-input"
+              placeholder="Add a comment..."
+              autocomplete="off"
+            />
+            <button type="submit" id="post-btn" disabled aria-label="Send">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="20"
+                width="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#0095f6"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M22 2L11 13"></path>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+              </svg>
+            </button>
+          </form>
+        </div>
+        <div class="comments" id="comments">
+          <div class="comment">
+            <strong>user1</strong>Scrollable comment section.
+          </div>
+          <div class="comment"><strong>user2</strong>Modern CSS is nice 👏</div>
+          <div class="comment">
+            <strong>user3</strong>Handles the on-screen keyboard 👍
+          </div>
+          <div class="comment"><strong>user4</strong>Cross-browser support</div>
+          <div class="comment"><strong>user1</strong>Accessible</div>
+          <div class="comment"><strong>user2</strong>Uses web components</div>
+          <div class="comment"><strong>user3</strong>Easy to customize</div>
+          <div class="comment"><strong>user4</strong>Framework-agnostic</div>
+          <div class="comment">
+            <strong>user1</strong>Use with any framework
+          </div>
+          <div class="comment">
+            <strong>user2</strong>Or no framework at all
+          </div>
+          <div class="comment"><strong>user3</strong>(Vanilla HTML)</div>
+          <div class="comment"><strong>user4</strong>Sticky header</div>
+          <div class="comment">
+            <strong>user1</strong>And sticky footer
+          </div>
+          <div class="comment"><strong>user2</strong>Near zero-JavaScript</div>
+          <div class="comment">
+            <strong>user3</strong>Leverages CSS scroll snap
+          </div>
+          <div class="comment">
+            <strong>user4</strong>And CSS scroll-driven animations
+          </div>
+          <div class="comment">
+            <strong>user1</strong>One more test comment.
+          </div>
+          <div class="comment">
+            <strong>user2</strong>Also from me.
+          </div>
+          <div class="comment">
+            <strong>user3</strong>Test comment for scrolling.
+          </div>
+          <div class="comment"><strong>user4</strong>Another test comment.</div>
+          <div class="comment"><strong>user1</strong>No comments from me!</div>
+          <div class="comment">
+            <strong>user2</strong>Thanks for the chat! 👋
+          </div>
+          <div class="comment"><strong>user3</strong>See you next time.</div>
+          <div class="comment">
+            <strong>user4</strong>Such a great discussion!
+          </div>
+        </div>
+      </bottom-sheet>
+    </dialog>
+  </bottom-sheet-dialog-manager>
+</Layout>
+
+<style is:global>
+  bottom-sheet.example {
+    &::part(content) {
+      scroll-snap-type: y proximity;
+    }
+
+    &::part(content)::after {
+      display: block;
+      content: "";
+      scroll-snap-align: start;
+      height: 1px;
+    }
+
+    &::part(header) {
+      text-align: center;
+    }
+  }
+
+  dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  dialog:not([open]):has(> bottom-sheet[data-sheet-snap-position="2"]) {
+    transition: none;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: 0;
+    background: transparent;
+    height: 100%;
+    border-radius: 12px;
+  }
+
+  .comments-header {
+    display: flex;
+    align-items: center;
+    margin: auto 1rem;
+    padding-bottom: 1rem;
+
+    h2 {
+      flex: 1;
+      margin: 0;
+    }
+
+    .close-btn {
+      padding: 0.5rem;
+      position: absolute;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      color: #333;
+    }
+  }
+
+  .comments {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  .comment:not(:last-of-type) {
+    padding: 6px 0;
+    border-bottom: 1px solid light-dark(#f0f0f0, #424242);
+  }
+
+  .comment strong {
+    font-weight: 600;
+    margin-right: 5px;
+  }
+
+  .comment-input {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid light-dark(#ddd, #424242);
+    background: light-dark(#fff, #232323);
+  }
+
+  .comment-input button {
+    background: none;
+    border: none;
+    color: #0095f6;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .comment-input button:disabled {
+    color: #b3dffc;
+    cursor: default;
+  }
+
+  .comment-input button:disabled svg {
+    stroke: #b3dffc;
+    cursor: default;
+  }
+</style>
+
+<script>
+  import { registerSheetElements } from "pure-web-bottom-sheet";
+  registerSheetElements();
+
+  declare global {
+    interface Navigator {
+      readonly virtualKeyboard: { overlaysContent: boolean };
+    }
+  }
+
+  if ("virtualKeyboard" in navigator) {
+    navigator.virtualKeyboard.overlaysContent = true;
+  }
+
+  const openModalButton = document.getElementById("open-modal");
+  const openNonModalButton = document.getElementById("open-nonmodal");
+  const closeModalButton = document.getElementById("close-modal");
+  const dialog = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog",
+  );
+
+  openModalButton?.addEventListener("click", () => {
+    dialog?.showModal();
+  });
+
+  openNonModalButton?.addEventListener("click", () => {
+    dialog?.show();
+  });
+
+  closeModalButton?.addEventListener("click", () => {
+    dialog?.close();
+  });
+</script>
+
+<script type="module" is:inline>
+  const form = document.getElementById("comment-form");
+  const input = document.getElementById("comment-input");
+  const postBtn = document.getElementById("post-btn");
+  const commentsDiv = document.getElementById("comments");
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    const div = document.createElement("div");
+    div.className = "comment";
+    div.innerHTML = `<strong>you</strong>${text}`;
+    commentsDiv.appendChild(div);
+    input.value = "";
+    input.focus();
+    postBtn.disabled = true;
+    commentsDiv.scrollTop = commentsDiv.scrollHeight;
+  });
+
+  input.addEventListener("input", () => {
+    postBtn.disabled = input.value.trim() === "";
+  });
+</script>

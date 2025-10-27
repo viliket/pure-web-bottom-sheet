@@ -1,0 +1,225 @@
+---
+const { bottomSheetSelector = "bottom-sheet" } = Astro.props;
+---
+
+<div
+  class="config-panel-container"
+  data-bottom-sheet-selector={bottomSheetSelector}
+>
+</div>
+
+<script>
+  import { Pane } from "tweakpane";
+
+  window.addEventListener("DOMContentLoaded", () => {
+    document
+      .querySelectorAll<HTMLElement>(".config-panel-container")
+      .forEach((container) => {
+        const bottomSheetSelector = container.dataset.bottomSheetSelector;
+        if (!bottomSheetSelector) {
+          console.error("Bottom sheet selector not set in config panel.");
+          return;
+        }
+        const bottomSheet =
+          document.querySelector<HTMLElement>(bottomSheetSelector);
+        if (!bottomSheet) {
+          console.error(
+            `Bottom sheet element not found for selector: ${bottomSheetSelector}`,
+          );
+          return;
+        }
+
+        const params = {
+          sheetMaxHeight: window
+            .getComputedStyle(bottomSheet)
+            .getPropertyValue("--sheet-max-height"),
+          alwaysStopAtSnapPoints:
+            bottomSheet.classList.contains("snap-stop-always"),
+          contentHeight: bottomSheet.hasAttribute("content-height"),
+          nestedScroll: bottomSheet.hasAttribute("nested-scroll"),
+          expandToScroll: bottomSheet.hasAttribute("expand-to-scroll"),
+          nestedScrollOptimization: bottomSheet.hasAttribute(
+            "nested-scroll-optimization",
+          ),
+        };
+
+        const pane = new Pane({
+          title: "Bottom sheet config",
+          expanded: false,
+          container,
+        });
+
+        pane.addBinding(params, "sheetMaxHeight", {
+          label: "Sheet max height",
+        });
+        pane.addBinding(params, "alwaysStopAtSnapPoints", {
+          label:
+            "Always stop at each snap point (sets `scroll-snap-stop: always` on each snap point)",
+        });
+        const contentHeightBinding = pane.addBinding(params, "contentHeight", {
+          label: "Content height",
+        });
+        pane.addBinding(params, "nestedScroll", { label: "Nested scroll" });
+
+        const nestedScrollFolder = pane.addFolder({
+          title: "Options specific to nested scroll",
+          expanded: true,
+        });
+        const nestedScrollOptimizationBinding = nestedScrollFolder.addBinding(
+          params,
+          "nestedScrollOptimization",
+          {
+            label: "Nested scroll optimization",
+          },
+        );
+        const expandToScrollBinding = nestedScrollFolder.addBinding(
+          params,
+          "expandToScroll",
+          {
+            label: "Expand to scroll",
+          },
+        );
+
+        const update = () => {
+          if (params.nestedScroll) {
+            params.contentHeight = false;
+            contentHeightBinding.refresh();
+          } else {
+            params.expandToScroll = false;
+            expandToScrollBinding.refresh();
+            params.nestedScrollOptimization = false;
+            nestedScrollOptimizationBinding.refresh();
+          }
+          if (params.expandToScroll) {
+            params.nestedScrollOptimization = false;
+            nestedScrollOptimizationBinding.refresh();
+          }
+          nestedScrollFolder.disabled = !params.nestedScroll;
+          expandToScrollBinding.disabled = !params.nestedScroll;
+          contentHeightBinding.disabled = params.nestedScroll;
+          nestedScrollOptimizationBinding.disabled =
+            !params.nestedScroll || params.expandToScroll;
+
+          (
+            [
+              ["nested-scroll", params.nestedScroll],
+              ["nested-scroll-optimization", params.nestedScrollOptimization],
+              ["expand-to-scroll", params.expandToScroll],
+              ["content-height", params.contentHeight],
+            ] as [string, boolean][]
+          ).forEach(([attr, enabled]) => {
+            if (enabled) bottomSheet.setAttribute(attr, "");
+            else bottomSheet.removeAttribute(attr);
+          });
+
+          if (params.alwaysStopAtSnapPoints) {
+            bottomSheet.classList.add("snap-stop-always");
+          } else {
+            bottomSheet.classList.remove("snap-stop-always");
+          }
+
+          window.requestAnimationFrame(() => {
+            bottomSheet.style.setProperty(
+              "--sheet-max-height",
+              params.sheetMaxHeight,
+            );
+          });
+        };
+
+        pane.on("change", update);
+        update();
+      });
+  });
+</script>
+
+<style>
+  .config-panel-container {
+    min-height: 50px;
+    margin-bottom: 1em;
+
+    --tp-base-background-color: light-dark(
+      hsla(230, 5%, 90%, 1),
+      hsla(230, 7%, 17%, 1)
+    );
+    --tp-base-shadow-color: light-dark(
+      hsla(0, 0%, 0%, 0.1),
+      hsla(0, 0%, 0%, 0.2)
+    );
+    --tp-button-background-color: light-dark(
+      hsla(230, 7%, 75%, 1),
+      hsla(230, 7%, 70%, 1)
+    );
+    --tp-button-background-color-active: light-dark(
+      hsla(230, 7%, 60%, 1),
+      hsla(230, 7%, 85%, 1)
+    );
+    --tp-button-background-color-focus: light-dark(
+      hsla(230, 7%, 65%, 1),
+      hsla(230, 7%, 80%, 1)
+    );
+    --tp-button-background-color-hover: light-dark(
+      hsla(230, 7%, 70%, 1),
+      hsla(230, 7%, 75%, 1)
+    );
+    --tp-button-foreground-color: light-dark(
+      hsla(230, 10%, 30%, 1),
+      hsla(230, 7%, 17%, 1)
+    );
+    --tp-container-background-color: light-dark(
+      hsla(230, 15%, 30%, 0.2),
+      hsla(230, 7%, 75%, 0.1)
+    );
+    --tp-container-background-color-active: light-dark(
+      hsla(230, 15%, 30%, 0.32),
+      hsla(230, 7%, 75%, 0.25)
+    );
+    --tp-container-background-color-focus: light-dark(
+      hsla(230, 15%, 30%, 0.28),
+      hsla(230, 7%, 75%, 0.2)
+    );
+    --tp-container-background-color-hover: light-dark(
+      hsla(230, 15%, 30%, 0.24),
+      hsla(230, 7%, 75%, 0.15)
+    );
+    --tp-container-foreground-color: light-dark(
+      hsla(230, 10%, 30%, 1),
+      hsla(230, 7%, 75%, 1)
+    );
+    --tp-groove-foreground-color: light-dark(
+      hsla(230, 15%, 30%, 0.1),
+      hsla(230, 7%, 75%, 0.1)
+    );
+    --tp-input-background-color: light-dark(
+      hsla(230, 15%, 30%, 0.1),
+      hsla(230, 7%, 75%, 0.1)
+    );
+    --tp-input-background-color-active: light-dark(
+      hsla(230, 15%, 30%, 0.22),
+      hsla(230, 7%, 75%, 0.25)
+    );
+    --tp-input-background-color-focus: light-dark(
+      hsla(230, 15%, 30%, 0.18),
+      hsla(230, 7%, 75%, 0.2)
+    );
+    --tp-input-background-color-hover: light-dark(
+      hsla(230, 15%, 30%, 0.14),
+      hsla(230, 7%, 75%, 0.15)
+    );
+    --tp-input-foreground-color: light-dark(
+      hsla(230, 10%, 30%, 1),
+      hsla(230, 7%, 75%, 1)
+    );
+    --tp-label-foreground-color: light-dark(
+      hsla(230, 10%, 30%, 0.7),
+      hsla(230, 7%, 75%, 0.7)
+    );
+    --tp-monitor-background-color: light-dark(
+      hsla(230, 15%, 30%, 0.1),
+      hsla(230, 7%, 0%, 0.2)
+    );
+    --tp-monitor-foreground-color: light-dark(
+      hsla(230, 10%, 30%, 0.5),
+      hsla(230, 7%, 75%, 0.7)
+    );
+  }
+</style>

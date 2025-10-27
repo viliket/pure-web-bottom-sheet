@@ -1,0 +1,57 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: "package.json"
+          check-latest: true
+
+      - run: npm ci
+
+      - name: Build package
+        run: npm run build:prod
+
+      - name: Build Astro examples
+        run: npm run build -w examples/astro
+
+      - name: Build React / Next.js examples
+        run: npm run build -w examples/react-nextjs
+
+      - name: Build Vue / Nuxt examples
+        run: npm run generate -w examples/vue-nuxt
+
+      - name: Prepare site contents
+        run: |
+          mkdir -p ./pages_dist
+          cp -r examples/astro/dist/* ./pages_dist/
+          mkdir -p ./pages_dist/react-nextjs
+          cp -r examples/react-nextjs/dist/* ./pages_dist/react-nextjs/
+          mkdir -p ./pages_dist/vue-nuxt
+          cp -r examples/vue-nuxt/dist/* ./pages_dist/vue-nuxt/
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./pages_dist
+
+  deploy:
+    needs: build
+    if: false # Disable deployment for now
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write # To deploy to Pages
+      id-token: write # To verify the deployment originates from an appropriate source
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

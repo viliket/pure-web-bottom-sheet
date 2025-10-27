@@ -1,0 +1,75 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <section>
+    <h1>Examples</h1>
+    <section>
+      <p>
+        Below are several examples demonstrating different configurations and
+        use cases of the bottom sheet component.
+      </p>
+      <ul>
+        <li>
+          <a href=`${import.meta.env.BASE_URL}/non-dismissible/`
+            >Non-dismissible bottom sheet (with multiple snap points)</a
+          >
+        </li>
+        <li>
+          <a href=`${import.meta.env.BASE_URL}/dialog/`
+            >Modal bottom sheet (using dialog)</a
+          >
+        </li>
+        <li>
+          <a href=`${import.meta.env.BASE_URL}/dialog-half-viewport-height-max/`
+            >Modal bottom sheet (maximum height half of viewport)</a
+          >
+        </li>
+        <li>
+          <a href=`${import.meta.env.BASE_URL}/nested-dialogs/`
+            >Nested dialogs (no extra styling)</a
+          >
+        </li>
+        <li>
+          <a
+            href=`${import.meta.env.BASE_URL}/nested-dialogs-with-stacking-effect/`
+            >Nested dialogs with a stacking effect and a scaled background
+            effect (extra styling)</a
+          >
+        </li>
+        <li>
+          <a href=`${import.meta.env.BASE_URL}/popover`
+            >Non-modal bottom sheet with Popover API ("pure CSS")</a
+          >
+        </li>
+        <li>
+          <a href=`${import.meta.env.BASE_URL}/chat/`
+            >Chat (on-screen keyboard avoidance)</a
+          >
+        </li>
+        <li>
+          <a href=`${import.meta.env.BASE_URL}/dynamic-content/`
+            >Non-dismissible bottom sheet with dynamic content (to demonstrate
+            dynamic content causes no abrupt re-snapping)</a
+          >
+        </li>
+      </ul>
+    </section>
+    <section>
+      <h2>Others</h2>
+      <ul>
+        <li>
+          <a href=`${import.meta.env.BASE_URL}/react-nextjs/`
+            >Examples (React / Next.js)</a
+          >
+        </li>
+        <li>
+          <a href=`${import.meta.env.BASE_URL}/vue-nuxt/`
+            >Examples (Vue / Nuxt)</a
+          >
+        </li>
+      </ul>
+    </section>
+  </section>
+</Layout>

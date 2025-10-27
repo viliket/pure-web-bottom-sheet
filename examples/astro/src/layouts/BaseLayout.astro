@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href=`${import.meta.env.BASE_URL}/favicon.svg`
+    />
+    <meta name="generator" content={Astro.generator} />
+    <title>Examples - pure-web-bottom-sheet</title>
+    <script is:inline>
+      const storedTheme = localStorage.getItem("theme");
+      if (storedTheme) {
+        document.documentElement.dataset.theme = storedTheme;
+      }
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  @import url("https://unpkg.com/normalize.css") layer(normalize);
+
+  :root {
+    color-scheme: light dark;
+  }
+
+  html[data-theme="light"] {
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  body {
+    color: light-dark(#000000, #c9d1d9);
+    background: light-dark(#fff, #18191b);
+  }
+
+  a {
+    color: light-dark(#005ecb, #58a6ff);
+    text-decoration: underline;
+  }
+
+  a:hover {
+    text-decoration: none;
+  }
+
+  body {
+    margin: 0;
+    font:
+      1.2rem/1.62 "atkinson hyperlegible",
+      -apple-system,
+      BlinkMacSystemFont,
+      "avenir next",
+      avenir,
+      "segoe ui",
+      "helvetica neue",
+      helvetica,
+      cantarell,
+      ubuntu,
+      roboto,
+      noto,
+      arial,
+      sans-serif;
+  }
+
+  body > main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 0.5rem;
+  }
+
+  h1,
+  h2,
+  h3 {
+    line-height: 1.2;
+  }
+
+  button {
+    display: inline-block;
+    cursor: pointer;
+    padding: 5px 16px;
+    font-family: inherit;
+    font-size: 100%;
+    line-height: 1.15;
+    margin: 0;
+    vertical-align: middle;
+    border: 1px solid;
+    border-radius: 6px;
+    color: light-dark(#24292e, #fff);
+    background-color: light-dark(#fafbfc, #373737);
+    border-color: light-dark(#1b1f2326, #5a5a5a);
+    transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+    transition-property: color, background-color, border-color;
+
+    &:hover {
+      background-color: light-dark(#f3f4f6, rgb(61, 61, 61));
+      border-color: light-dark(#1b1f2326, #444c56);
+      transition-duration: 0.1s;
+    }
+  }
+
+  bottom-sheet.example {
+    --sheet-background: light-dark(#f2f2f2, #222426);
+  }
+
+  dialog:modal bottom-sheet.example {
+    --sheet-background: light-dark(#f9f9f9, #222426);
+  }
+
+  bottom-sheet.snap-stop-always [slot="snap"]::before,
+  bottom-sheet.snap-stop-always .snap::before,
+  bottom-sheet.snap-stop-always::part(sheet) {
+    scroll-snap-stop: always;
+  }
+</style>

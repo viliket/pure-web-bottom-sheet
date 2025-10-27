@@ -1,0 +1,82 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DummyContent from "../components/DummyContent.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+import SheetConfigPanel from "../components/SheetConfigPanel.astro";
+---
+
+<Layout>
+  <section>
+    <h1>Modal bottom sheet (using dialog)</h1>
+    <p>
+      A modal bottom sheet that uses the native <code>&lt;dialog&gt;</code> element
+      and the
+      <code>&lt;bottom-sheet-dialog-manager&gt;</code>.
+    </p>
+    <p><button id="open-modal">Open sheet</button></p>
+  </section>
+  <SheetConfigPanel bottomSheetSelector="bottom-sheet.example" />
+  <DummyContent />
+
+  <bottom-sheet-dialog-manager>
+    <dialog id="bottom-sheet-dialog">
+      <bottom-sheet class="example" nested-scroll swipe-to-dismiss tabindex="0">
+        <template shadowrootmode="open">
+          <Fragment set:html={bottomSheetTemplate} />
+        </template>
+
+        {/* Snap points */}
+        <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+        <div slot="header">
+          <h2>Custom header</h2>
+        </div>
+        <div slot="footer">
+          <h2>Custom footer</h2>
+        </div>
+
+        <p>
+          This bottom sheet is dismissible, meaning it will close when you click
+          outside of it or swipe down.
+        </p>
+        <p>
+          This bottom sheet has the following snap points:
+          <ul>
+            <li>maximum height, based on <code>--sheet-max-height</code></li>
+            <li>50% of the max height (set as initial scroll target)</li>
+            <li>
+              0%, bottom (closes the dialog, present when the <code
+                >bottom-sheet</code
+              > has <code>swipe-to-dismiss</code> attribute)
+            </li>
+          </ul>
+        </p>
+
+        <details open>
+          <summary>Dummy content</summary>
+          <DummyContent />
+        </details>
+      </bottom-sheet>
+    </dialog>
+  </bottom-sheet-dialog-manager>
+</Layout>
+
+<style>
+  bottom-sheet h2 {
+    margin: 0.5em 0;
+    text-align: center;
+  }
+</style>
+
+<script>
+  import { registerSheetElements } from "pure-web-bottom-sheet";
+  registerSheetElements();
+
+  const openModalButton = document.getElementById("open-modal");
+  const dialog = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog",
+  );
+  openModalButton?.addEventListener("click", () => {
+    dialog?.showModal();
+  });
+</script>

@@ -1,0 +1,64 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DummyContent from "../components/DummyContent.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+import SheetConfigPanel from "../components/SheetConfigPanel.astro";
+---
+
+<Layout>
+  <section>
+    <h1>Non-dismissible bottom sheet</h1>
+    <p>A non-dismissible, non-modal bottom sheet with multiple snap points.</p>
+  </section>
+  <SheetConfigPanel bottomSheetSelector="bottom-sheet.example" />
+  <DummyContent />
+
+  <bottom-sheet class="example" tabindex="0">
+    <template shadowrootmode="open">
+      <Fragment set:html={bottomSheetTemplate} />
+    </template>
+
+    {/* Snap points */}
+    <div slot="snap" style="--snap: 25%"></div>
+    <div slot="snap" style="--snap: 50%" class="initial"></div>
+    <div slot="snap" style="--snap: 75%"></div>
+
+    <div slot="header">
+      <h2>Custom header</h2>
+    </div>
+    <div slot="footer">
+      <h2>Custom footer</h2>
+    </div>
+
+    <p>
+      This bottom sheet is non-dismissible, meaning it will not close when you
+      click outside of it or swipe down.
+    </p>
+    <p>
+      This bottom sheet has the following snap points:
+      <ul>
+        <li>maximum height, based on <code>--sheet-max-height</code></li>
+        <li>75% of the maximum height</li>
+        <li>50% of the maximum height (set as the initial snap point)</li>
+        <li>25% of the maximum height</li>
+      </ul>
+    </p>
+
+    <details open>
+      <summary>Dummy content</summary>
+      <DummyContent />
+    </details>
+  </bottom-sheet>
+</Layout>
+
+<style>
+  bottom-sheet.example h2 {
+    margin: 0.5em 0;
+    text-align: center;
+  }
+</style>
+
+<script>
+  import { BottomSheet } from "pure-web-bottom-sheet";
+  customElements.define("bottom-sheet", BottomSheet);
+</script>

@@ -1,0 +1,75 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DummyContent from "../components/DummyContent.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+import SheetConfigPanel from "../components/SheetConfigPanel.astro";
+---
+
+<Layout>
+  <section>
+    <h1>Non-dismissible bottom sheet with dynamic content</h1>
+    <p>
+      This example demonstrates a bottom sheet with dynamic content. It works
+      reliably even though browsers differ in how they implement
+      <a href="https://www.w3.org/TR/css-scroll-snap-1/#re-snap"
+        >re-snapping after layout changes</a
+      > as described in the CSS scroll snap specification.
+    </p>
+  </section>
+  <SheetConfigPanel bottomSheetSelector="bottom-sheet.example" />
+  <DummyContent />
+
+  <bottom-sheet class="example" tabindex="0">
+    <template shadowrootmode="open">
+      <Fragment set:html={bottomSheetTemplate} />
+    </template>
+
+    {/* Snap points */}
+    <div slot="snap" style="--snap: 25%"></div>
+    <div slot="snap" style="--snap: 50%" class="initial"></div>
+    <div slot="snap" style="--snap: 75%"></div>
+
+    <div slot="header">
+      <h2>Dynamic content: <span id="current-time"></span></h2>
+    </div>
+    <div slot="footer">
+      <h2>Custom footer</h2>
+    </div>
+
+    <p>
+      The bottom sheet remains stable and does not unexpectedly re-snap its
+      position, even as the time updates every second and the layout changes.
+    </p>
+
+    <details open>
+      <summary>Dummy content</summary>
+      <DummyContent />
+    </details>
+  </bottom-sheet>
+</Layout>
+
+<style>
+  bottom-sheet.example h2 {
+    margin: 0.5em 0;
+    text-align: center;
+  }
+</style>
+
+<script>
+  import { BottomSheet } from "pure-web-bottom-sheet";
+  customElements.define("bottom-sheet", BottomSheet);
+
+  function updateTime() {
+    const timeElement = document.getElementById("current-time");
+    if (timeElement) {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+  }
+
+  updateTime();
+  setInterval(updateTime, 1000);
+</script>

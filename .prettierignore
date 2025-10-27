@@ -1,0 +1,8 @@
+.next/
+dist/
+.astro/
+.nuxt/
+.output/
+.cache/
+
+package-lock.json

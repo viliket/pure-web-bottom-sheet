@@ -1,0 +1,185 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DummyContent from "../components/DummyContent.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+---
+
+<Layout>
+  <section>
+    <h1>Popover API</h1>
+    <p>
+      This is an example of a bottom sheet that uses the popover API to toggle
+      its visibility. The example can be viewed completely without JavaScript,
+      as it is relying on CSS for the transition and visibility, and the bottom
+      sheet itself needs no JavaScript to function. Only the effect of closing
+      the popover when the bottom sheet is swiped down is done with JavaScript
+      and is not necessary for the popover to work.
+    </p>
+    <p>
+      <button popovertargetaction="toggle" popovertarget="bottom-sheet-1">
+        Open popover
+      </button>
+    </p>
+    <p>
+      Try disabling JavaScript in your browser and reload the page. The
+      popover-based bottom sheet will still open and close using native browser
+      behavior. However, swiping down will not close it without JavaScript, but
+      clicking outside will dismiss the popover as expected.
+    </p>
+  </section>
+  <bottom-sheet
+    class="example"
+    swipe-to-dismiss
+    popover="auto"
+    autofocus
+    id="bottom-sheet-1"
+    role="complementary"
+    aria-label="Bottom sheet 1"
+    tabindex="0"
+  >
+    <template shadowrootmode="open">
+      <Fragment set:html={bottomSheetTemplate} />
+    </template>
+
+    {/* Snap points */}
+    <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+    <div slot="header">
+      <h2>Custom header</h2>
+    </div>
+    <div slot="footer">
+      <h2>Custom footer</h2>
+    </div>
+
+    <button popovertargetaction="toggle" popovertarget="bottom-sheet-2">
+      Open another popover
+    </button>
+
+    <DummyContent />
+  </bottom-sheet>
+
+  <bottom-sheet
+    class="example"
+    swipe-to-dismiss
+    popover="auto"
+    autofocus
+    id="bottom-sheet-2"
+    role="complementary"
+    aria-label="Bottom sheet 2"
+    tabindex="0"
+  >
+    <template shadowrootmode="open">
+      <Fragment set:html={bottomSheetTemplate} />
+    </template>
+
+    {/* Snap points */}
+    <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+    <div slot="header">
+      <h2>Custom header</h2>
+    </div>
+    <div slot="footer">
+      <h2>Custom footer</h2>
+    </div>
+
+    <DummyContent />
+  </bottom-sheet>
+  <DummyContent />
+</Layout>
+
+<style>
+  :root {
+    --transition-duration: 0.5s;
+    --transition-timing: ease-out;
+  }
+
+  @property --dialog-open {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0;
+  }
+
+  bottom-sheet.example {
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: auto;
+    top: auto;
+    background: none;
+    &::backdrop {
+      background-color: rgba(0, 0, 0, 0.5);
+      animation: fade-in linear forwards;
+      animation-timeline: --sheet-timeline;
+      animation-range-end: 100vh;
+    }
+  }
+
+  bottom-sheet.example h2 {
+    margin: 0.5em 0;
+    text-align: center;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: calc(1 * var(--dialog-open));
+    }
+  }
+
+  bottom-sheet[popover]:popover-open {
+    translate: 0 0;
+    --dialog-open: 1;
+  }
+
+  @starting-style {
+    bottom-sheet[popover]:popover-open {
+      translate: 0 100vh;
+      --dialog-open: 0;
+    }
+  }
+
+  bottom-sheet[popover] {
+    transition:
+      --dialog-open var(--transition-duration) var(--transition-timing),
+      translate var(--transition-duration) var(--transition-timing),
+      overlay var(--transition-duration) var(--transition-timing) allow-discrete,
+      display var(--transition-duration) var(--transition-timing) allow-discrete;
+    translate: 0 100vh;
+  }
+
+  bottom-sheet[popover]:not(:popover-open):not(dialog[open]) {
+    display: none;
+  }
+
+  bottom-sheet[popover][data-sheet-snap-position="2"]:not(:popover-open) {
+    transition: none;
+  }
+</style>
+
+<script>
+  import { BottomSheet } from "pure-web-bottom-sheet";
+  customElements.define("bottom-sheet", BottomSheet);
+
+  Array.from(document.getElementsByTagName("bottom-sheet")).forEach(
+    (bottomSheet) =>
+      bottomSheet.addEventListener(
+        "snap-position-change",
+        (event: CustomEventInit<{ snapPosition: string }> & Event) => {
+          if (
+            event.detail?.snapPosition == "2" &&
+            event.target instanceof HTMLElement &&
+            event.target.hasAttribute("swipe-to-dismiss") &&
+            event.target.checkVisibility() &&
+            // Prevent Safari from closing the popover immediately after opening
+            // while the popover open transition is still running.
+            getComputedStyle(event.target).getPropertyValue("translate") ===
+              "0px"
+          ) {
+            event.target.hidePopover();
+          }
+        },
+      ),
+  );
+</script>

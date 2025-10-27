@@ -1,0 +1,156 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DummyContent from "../components/DummyContent.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+---
+
+<Layout>
+  <section>
+    <h1>Nested dialogs</h1>
+    <p>Multiple nested bottom sheets.</p>
+    <p>
+      <button id="open-modal-1">Open sheet as modal</button>
+      <button id="open-nonmodal-1">Open sheet as non-modal</button>
+    </p>
+  </section>
+  <DummyContent />
+
+  <bottom-sheet-dialog-manager>
+    <dialog id="bottom-sheet-dialog-1">
+      <bottom-sheet class="example" nested-scroll swipe-to-dismiss tabindex="0">
+        <template shadowrootmode="open">
+          <Fragment set:html={bottomSheetTemplate} />
+        </template>
+
+        {/* Snap points */}
+        <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+        <button id="open-modal-2">Open modal 2</button>
+        <button id="close-modal-1">Close this modal</button>
+
+        <DummyContent />
+      </bottom-sheet>
+    </dialog>
+  </bottom-sheet-dialog-manager>
+
+  <bottom-sheet-dialog-manager>
+    <dialog id="bottom-sheet-dialog-2">
+      <bottom-sheet
+        class="example"
+        nested-scroll
+        expand-to-scroll
+        swipe-to-dismiss
+        tabindex="0"
+      >
+        <template shadowrootmode="open">
+          <Fragment set:html={bottomSheetTemplate} />
+        </template>
+
+        {/* Snap points */}
+        <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+        <button id="open-modal-3">Open modal 3</button>
+
+        <DummyContent />
+      </bottom-sheet>
+    </dialog>
+  </bottom-sheet-dialog-manager>
+
+  <bottom-sheet-dialog-manager>
+    <dialog id="bottom-sheet-dialog-3">
+      <bottom-sheet
+        class="example"
+        nested-scroll
+        expand-to-scroll
+        swipe-to-dismiss
+        tabindex="0"
+      >
+        <template shadowrootmode="open">
+          <Fragment set:html={bottomSheetTemplate} />
+        </template>
+
+        {/* Snap points */}
+        <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+        <button id="open-modal-4">Open modal 4</button>
+
+        <DummyContent />
+      </bottom-sheet>
+    </dialog>
+  </bottom-sheet-dialog-manager>
+
+  <bottom-sheet-dialog-manager>
+    <dialog id="bottom-sheet-dialog-4">
+      <bottom-sheet
+        class="example"
+        nested-scroll
+        expand-to-scroll
+        swipe-to-dismiss
+        tabindex="0"
+      >
+        <template shadowrootmode="open">
+          <Fragment set:html={bottomSheetTemplate} />
+        </template>
+
+        {/* Snap points */}
+        <div slot="snap" style="--snap: 50%" class="initial"></div>
+
+        <DummyContent />
+      </bottom-sheet>
+    </dialog>
+  </bottom-sheet-dialog-manager>
+</Layout>
+
+<style>
+  dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+</style>
+
+<script>
+  import { registerSheetElements } from "pure-web-bottom-sheet";
+  registerSheetElements();
+
+  const openModal1Button = document.getElementById("open-modal-1");
+  const openNonModal1Button = document.getElementById("open-nonmodal-1");
+  const closeModal1Button = document.getElementById("close-modal-1");
+  const openModal2Button = document.getElementById("open-modal-2");
+  const openModal3Button = document.getElementById("open-modal-3");
+  const openModal4Button = document.getElementById("open-modal-4");
+  const dialog1 = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog-1",
+  );
+  const dialog2 = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog-2",
+  );
+  const dialog3 = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog-3",
+  );
+  const dialog4 = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog-4",
+  );
+
+  openModal1Button?.addEventListener("click", () => {
+    dialog1?.showModal();
+  });
+
+  openModal2Button?.addEventListener("click", () => {
+    dialog2?.showModal();
+  });
+
+  openModal3Button?.addEventListener("click", () => {
+    dialog3?.showModal();
+  });
+
+  openModal4Button?.addEventListener("click", () => {
+    dialog4?.showModal();
+  });
+
+  openNonModal1Button?.addEventListener("click", () => {
+    dialog1?.show();
+  });
+
+  closeModal1Button?.addEventListener("click", () => {
+    dialog1?.close();
+  });
+</script>
