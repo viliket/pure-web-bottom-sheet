@@ -44,7 +44,6 @@ jobs:
 
   deploy:
     needs: build
-    if: false # Disable deployment for now
     runs-on: ubuntu-latest
     permissions:
       pages: write # To deploy to Pages
