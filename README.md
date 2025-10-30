@@ -76,7 +76,7 @@ npm install pure-web-bottom-sheet
     </bottom-sheet>
 
     <script type="module">
-      import { BottomSheet } from "./path/to/pure-web-bottom-sheet";
+      import { BottomSheet } from "https://unpkg.com/pure-web-bottom-sheet/pure-web-bottom-sheet";
       customElements.define("bottom-sheet", BottomSheet);
     </script>
   </body>
@@ -119,7 +119,7 @@ npm install pure-web-bottom-sheet
     <button id="show-button">Open bottom sheet</button>
 
     <script type="module">
-      import { registerSheetElements } from "./path/to/pure-web-bottom-sheet";
+      import { registerSheetElements } from "https://unpkg.com/pure-web-bottom-sheet/pure-web-bottom-sheet";
       registerSheetElements();
 
       document.getElementById("show-button").addEventListener("click", () => {
