@@ -1,6 +1,10 @@
 # pure-web-bottom-sheet
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/viliket/pure-web-bottom-sheet/blob/main/LICENSE)
+[![Build status](https://img.shields.io/github/actions/workflow/status/viliket/pure-web-bottom-sheet/test.yml?branch=main)](https://github.com/viliket/pure-web-bottom-sheet/actions/workflows/test.yml)
+[![Bundle size](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdeno.bundlejs.com%2F%3Fq%3Dpure-web-bottom-sheet&query=%24.size.uncompressedSize&label=bundle%20size)](https://bundlejs.com/?q=pure-web-bottom-sheet)
+[![Bundle size (compressed)](<https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdeno.bundlejs.com%2F%3Fq%3Dpure-web-bottom-sheet&query=%24.size.compressedSize&label=bundle%20size%20(compressed)>)](https://bundlejs.com/?q=pure-web-bottom-sheet)
+[![Version](https://img.shields.io/npm/v/pure-web-bottom-sheet)](https://www.npmjs.com/package/pure-web-bottom-sheet)
 
 A lightweight, framework-agnostic bottom sheet component leveraging [CSS scroll snap](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_scroll_snap)
 and implemented as a [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements).
