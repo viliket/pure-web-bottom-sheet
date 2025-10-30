@@ -366,7 +366,7 @@ const dialog = useTemplateRef("bottom-sheet-dialog");
 
 ## ▶️ Demos
 
-See [examples](./examples).
+See **[live examples and interactive demos](https://viliket.github.io/pure-web-bottom-sheet/)**
 
 ## 📄 API reference
 
