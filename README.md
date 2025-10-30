@@ -30,6 +30,8 @@ For server-side rendering or static site generation, the component includes [dec
 templates to avoid flash of unstyled content (FOUC) when displaying the bottom sheet
 initially open on page load.
 
+For technical details behind the implementation, read [Native-like bottom sheets on the web: the power of modern CSS](https://viliket.github.io/posts/native-like-bottom-sheets-on-the-web/).
+
 https://github.com/user-attachments/assets/d25beef6-7256-4b7c-93ca-7605f73045b8
 
 ## 📦 Installation
