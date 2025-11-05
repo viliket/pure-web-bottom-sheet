@@ -541,26 +541,6 @@ Here are the relevant CSS selectors for the sheet customization:
 - **`bottom-sheet::part(header)`**
 - **`bottom-sheet::part(footer)`**
 
-## 🧑‍💻 Development
+## 🤝 Contributing
 
-1. Install the dependencies by running `npm install`
-2. Build the library by running `npm run build`
-3. Build the production build of the library by running `npm run build:prod`
-
-Launch Astro examples:
-
-```sh
-npm run dev -w examples/astro
-```
-
-Launch React/Next.js examples:
-
-```sh
-npm run dev -w examples/react-nextjs
-```
-
-Launch Vue/Nuxt examples:
-
-```sh
-npm run dev -w examples/vue-nuxt
-```
+Contributions are welcome! Check out the [contributing guide](CONTRIBUTING.md) to get started.
