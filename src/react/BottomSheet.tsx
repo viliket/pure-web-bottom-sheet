@@ -29,7 +29,7 @@ export default function BottomSheet({
       <bottom-sheet
         {...props}
         // Need to use `suppressHydrationWarning` to avoid hydration mismatch
-        // because the bottom-sheet component updates its `data-sheet-snap-position`
+        // because the bottom-sheet component updates its `data-sheet-state`
         // attribute during the initial render, which is not reflected in the
         // server-rendered HTML.
         suppressHydrationWarning

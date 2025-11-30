@@ -49,7 +49,7 @@ const styles = css`
     to prevent snapping back to the top when the user scrolls the sheet on
     certain browsers (e.g. Firefox).
   */
-  :host([data-sheet-snap-position="-1"]) {
+  :host([data-scrolled-past-top]) {
     .sheet,
     .snap::before,
     ::slotted([slot="snap"])::before {
@@ -100,13 +100,13 @@ const styles = css`
   .sentinel {
     position: relative;
 
-    &[data-snap="0"] {
+    &[data-snap="top"] {
       top: -1px; /** Extra -1px needed for Safari */
     }
-    &[data-snap="-1"] {
+    &[data-snap="past-top"] {
       top: 2px; /** Extra +1px needed for Safari */
     }
-    &[data-snap="1"] {
+    &[data-snap="bottom"] {
       top: 1px;
     }
   }
@@ -397,7 +397,7 @@ const styles = css`
       overflow-y: hidden;
     }
 
-    :host([nested-scroll][expand-to-scroll][data-sheet-snap-position="0"])
+    :host([nested-scroll][expand-to-scroll][data-sheet-state="expanded"])
       .sheet-content {
       overflow-y: auto;
     }
@@ -428,12 +428,12 @@ export const template: string = /* HTML */ `
   <slot name="snap">
     <div class="snap initial" style="--snap: 100%"></div>
   </slot>
-  <div class="sentinel" data-snap="1"></div>
-  <div class="snap snap-bottom" data-snap="2"></div>
-  <div class="sentinel" data-snap="0"></div>
+  <div class="sentinel" data-snap="bottom"></div>
+  <div class="snap snap-bottom" data-snap="bottom"></div>
+  <div class="sentinel" data-snap="top"></div>
   <div class="sheet-wrapper">
-    <aside class="sheet" part="sheet" data-snap="0">
-      <div class="sentinel" data-snap="-1"></div>
+    <aside class="sheet" part="sheet" data-snap="top">
+      <div class="sentinel" data-snap="past-top"></div>
       <header class="sheet-header" part="header">
         <div class="handle" part="handle"></div>
         <slot name="header"></slot>

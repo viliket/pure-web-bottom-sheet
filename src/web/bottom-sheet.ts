@@ -59,6 +59,7 @@ export class BottomSheet extends HTMLElement {
       this.addEventListener("scroll", this.#handleScroll);
       this.#handleScroll();
     }
+    this.#setupScrolledPastTopObserver();
   }
 
   connectedCallback() {
@@ -73,51 +74,124 @@ export class BottomSheet extends HTMLElement {
     );
   }
 
-  #setupIntersectionObserver() {
-    this.#observer = new IntersectionObserver(
+  #setupScrolledPastTopObserver() {
+    const scrolledPastTopObserver = new IntersectionObserver(
       (entries) => {
-        let lowestIntersectingSnap = Infinity;
-        let highestNonIntersectingSnap = -Infinity;
-        let hasIntersectingElement = false;
-
-        for (const entry of entries) {
-          if (
-            !(entry.target instanceof HTMLElement) ||
-            entry.target.dataset.snap == null
-          ) {
-            continue;
-          }
-
-          const snap = Number.parseInt(entry.target.dataset.snap);
-
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            hasIntersectingElement = true;
-            lowestIntersectingSnap = Math.min(lowestIntersectingSnap, snap);
+            this.dataset.scrolledPastTop = "";
           } else {
-            highestNonIntersectingSnap = Math.max(
-              highestNonIntersectingSnap,
-              snap,
-            );
+            delete this.dataset.scrolledPastTop;
           }
-        }
-
-        const newSnapPosition = hasIntersectingElement
-          ? lowestIntersectingSnap
-          : highestNonIntersectingSnap + 1;
-
-        this.#updateSnapPosition(newSnapPosition.toString());
+        });
       },
       {
         root: this,
-        threshold: 0,
+        rootMargin: "1000% 0px -100% 0px",
+      },
+    );
+    const pastTopSentinel = this.#shadow.querySelector(
+      '.sentinel[data-snap="past-top"]',
+    );
+    if (pastTopSentinel) {
+      scrolledPastTopObserver.observe(pastTopSentinel);
+    }
+  }
+
+  #setupIntersectionObserver() {
+    const snapSlot =
+      this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]');
+    const bottomSnapTarget = this.#shadow.querySelector(
+      '.sentinel[data-snap="bottom"]',
+    );
+
+    if (!snapSlot || !bottomSnapTarget) return;
+
+    const intersectingTargets = new Set<Element>();
+    let previousSnapTarget: Element | null = null;
+
+    const getDistanceToObserverBottom = (entry: IntersectionObserverEntry) =>
+      Math.abs(entry.intersectionRect.top - (entry.rootBounds?.bottom ?? 0));
+
+    this.#observer = new IntersectionObserver(
+      (entries) => {
+        // Add intersecting entries to the set sorted by proximity to the host's top
+        // which is the point where snapping occurs because we use `scroll-snap-align: start`
+        entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => {
+            return (
+              getDistanceToObserverBottom(b) - getDistanceToObserverBottom(a)
+            );
+          })
+          .forEach((entry) => {
+            intersectingTargets.add(entry.target);
+          });
+
+        entries
+          .filter((entry) => !entry.isIntersecting)
+          .forEach((entry) => {
+            intersectingTargets.delete(entry.target);
+          });
+
+        const currentTarget = Array.from(intersectingTargets).at(-1);
+
+        // Skip if same as previous or if current target is bottom snap target
+        // (bottom snap target needs to be handled separately)
+        if (
+          currentTarget === bottomSnapTarget ||
+          currentTarget === previousSnapTarget
+        ) {
+          return;
+        }
+
+        // Handle case where none of the targets intersect (fully collapsed state)
+        if (!currentTarget) {
+          if (!this.hasAttribute("swipe-to-dismiss")) {
+            return;
+          }
+          // Use bottom target when nothing intersects and swipe-to-dismiss is enabled
+          previousSnapTarget = bottomSnapTarget;
+          this.#updateSnapPosition(bottomSnapTarget);
+          return;
+        }
+
+        previousSnapTarget = currentTarget;
+        this.#updateSnapPosition(currentTarget);
+      },
+      {
+        root: this,
         rootMargin: "1000% 0px -100% 0px",
       },
     );
 
-    const sentinels = this.#shadow.querySelectorAll(".sentinel");
+    const sentinels = this.#shadow.querySelectorAll(
+      '.sentinel:not([data-snap="past-top"])',
+    );
     Array.from(sentinels).forEach((sentinel) => {
       this.#observer?.observe(sentinel);
     });
+
+    let observedSnapPoints: Element[] = [];
+    const observeSnapPoints = () => {
+      const snapPoints = snapSlot.assignedElements();
+      const snapPointsSet = new Set(snapPoints);
+
+      // Unobserve elements no longer assigned to the slot
+      observedSnapPoints.forEach((el) => {
+        if (!snapPointsSet.has(el)) {
+          this.#observer?.unobserve(el);
+        }
+      });
+
+      snapPoints.forEach((el) => {
+        this.#observer?.observe(el);
+      });
+
+      observedSnapPoints = snapPoints;
+    };
+    snapSlot.addEventListener("slotchange", observeSnapPoints);
+    observeSnapPoints();
   }
 
   #handleScrollSnapChange(event: Event) {
@@ -125,16 +199,38 @@ export class BottomSheet extends HTMLElement {
     if (!(snapEvent.snapTargetBlock instanceof HTMLElement)) {
       return;
     }
-    const newSnapPosition = snapEvent.snapTargetBlock.dataset.snap ?? "1";
-    this.#updateSnapPosition(newSnapPosition);
+    this.#updateSnapPosition(snapEvent.snapTargetBlock);
   }
 
-  #updateSnapPosition(position: string) {
-    this.dataset.sheetSnapPosition = position;
+  #updateSnapPosition(newSnapTarget: Element) {
+    const snapSlot =
+      this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]')!;
+
+    let snapIndex: number;
+    let sheetState: SheetState;
+    if (newSnapTarget.matches('[slot="snap"]')) {
+      snapIndex = snapSlot.assignedElements().indexOf(newSnapTarget) + 1;
+      sheetState = "partially-expanded";
+    } else {
+      switch (newSnapTarget.getAttribute("data-snap")) {
+        case "top":
+        default: // "snap" slot fallback --snap: 100% is identical to top snap point
+          snapIndex = snapSlot.assignedElements().length + 1;
+          sheetState = "expanded";
+          break;
+        case "bottom":
+          snapIndex = 0;
+          sheetState = "collapsed";
+          break;
+      }
+    }
+
+    this.dataset.sheetState = sheetState;
     this.dispatchEvent(
-      new CustomEvent<{ snapPosition: string }>("snap-position-change", {
+      new CustomEvent<SnapPositionChangeEventDetail>("snap-position-change", {
         detail: {
-          snapPosition: position,
+          sheetState,
+          snapIndex,
         },
         bubbles: true,
         composed: true,
@@ -370,4 +466,11 @@ export interface BottomSheet extends HTMLElement {
    * with the `bottom-sheet-dialog-manager` or with the Popover API.
    */
   ["swipe-to-dismiss"]?: boolean;
+}
+
+type SheetState = "collapsed" | "partially-expanded" | "expanded";
+
+export interface SnapPositionChangeEventDetail {
+  sheetState: SheetState;
+  snapIndex: number;
 }

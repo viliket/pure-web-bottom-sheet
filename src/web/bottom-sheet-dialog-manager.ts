@@ -1,3 +1,4 @@
+import type { SnapPositionChangeEventDetail } from "./bottom-sheet";
 import { template } from "./bottom-sheet-dialog-manager.template";
 
 export class BottomSheetDialogManager extends HTMLElement {
@@ -25,12 +26,12 @@ export class BottomSheetDialogManager extends HTMLElement {
     });
     this.addEventListener(
       "snap-position-change",
-      (event: CustomEventInit<{ snapPosition: string }> & Event) => {
+      (event: CustomEventInit<SnapPositionChangeEventDetail> & Event) => {
         if (event.detail) {
-          this.dataset.sheetSnapPosition = event.detail.snapPosition;
+          this.dataset.sheetState = event.detail.sheetState;
         }
         if (
-          event.detail?.snapPosition == "2" &&
+          event.detail?.sheetState == "collapsed" &&
           event.target instanceof HTMLElement &&
           event.target.hasAttribute("swipe-to-dismiss") &&
           event.target.checkVisibility()
