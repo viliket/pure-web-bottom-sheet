@@ -21,7 +21,7 @@ export default function minifyTemplateLiterals(
       if (!id.endsWith(".js") && !id.endsWith(".ts")) return null;
 
       const htmlTagRegex = /\/\*\s*html\s*\*\/\s*`([\s\S]*?)`/g;
-      const cssTagRegex = /\/\*\s*css\s*\*\/\s*`([\s\S]*?)`/g;
+      const cssTagRegex = /(?:\/\*\s*css\s*\*\/\s*|css)\s*`([\s\S]*?)`/g;
 
       let transformed = code;
 
