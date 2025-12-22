@@ -112,6 +112,7 @@
     "test:types": "tsc --noEmit"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.0.0",
+    "npm": ">=11.7.0"
   }
 }
