@@ -30,6 +30,7 @@ export class BottomSheet extends HTMLElement {
   };
   #shadow: ShadowRoot;
   #cleanupNestedScrollResizeOptimization: (() => void) | null = null;
+  #currentSnapIndex: number | null = null;
 
   constructor() {
     super();
@@ -95,6 +96,17 @@ export class BottomSheet extends HTMLElement {
     );
     if (pastTopSentinel) {
       scrolledPastTopObserver.observe(pastTopSentinel);
+    }
+    if ("onscrollend" in window) {
+      this.addEventListener("scrollend", () => {
+        // When we have scrolled past top we need to separately update
+        // the snap position after scroll end because "scrolled-past-top"
+        // temporarily removes scroll snapping and we would not get the
+        // usual scrollsnapchange event when scrolling ends past top
+        if ("scrolledPastTop" in this.dataset && pastTopSentinel) {
+          this.#updateSnapPosition(pastTopSentinel);
+        }
+      });
     }
   }
 
@@ -205,17 +217,23 @@ export class BottomSheet extends HTMLElement {
   #updateSnapPosition(newSnapTarget: Element) {
     const snapSlot =
       this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]')!;
+    const snapSlotHasAssignedExplicitTop =
+      snapSlot.assignedElements().at(0)?.getAttribute("data-snap") === "top";
 
     let snapIndex: number;
     let sheetState: SheetState;
     if (newSnapTarget.matches('[slot="snap"]')) {
-      snapIndex = snapSlot.assignedElements().indexOf(newSnapTarget) + 1;
+      snapIndex =
+        snapSlot.assignedElements().length -
+        snapSlot.assignedElements().indexOf(newSnapTarget);
       sheetState = "partially-expanded";
     } else {
       switch (newSnapTarget.getAttribute("data-snap")) {
         case "top":
         default: // "snap" slot fallback --snap: 100% is identical to top snap point
-          snapIndex = snapSlot.assignedElements().length + 1;
+          snapIndex =
+            snapSlot.assignedElements().length +
+            (snapSlotHasAssignedExplicitTop ? 0 : 1);
           sheetState = "expanded";
           break;
         case "bottom":
@@ -224,6 +242,12 @@ export class BottomSheet extends HTMLElement {
           break;
       }
     }
+
+    if (this.#currentSnapIndex === snapIndex) {
+      return;
+    }
+
+    this.#currentSnapIndex = snapIndex;
 
     this.dataset.sheetState = sheetState;
     this.dispatchEvent(
