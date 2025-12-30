@@ -1,3 +1,5 @@
+import type { JSX } from "react/jsx-runtime";
+import { SnapPositionChangeEventDetail } from "../web/index.client";
 import {
   bottomSheetTemplate,
   BottomSheet as BottomSheetElement,
@@ -15,21 +17,29 @@ export type WebComponentProps<I extends HTMLElement> = React.DetailedHTMLProps<
 declare module "react/jsx-runtime" {
   namespace JSX {
     interface IntrinsicElements {
-      "bottom-sheet": WebComponentProps<BottomSheetElement>;
+      "bottom-sheet": WebComponentProps<BottomSheetElement> & {
+        "onsnap-position-change"?: (
+          event: CustomEvent<SnapPositionChangeEventDetail>,
+        ) => void;
+      };
     }
   }
 }
 
 export default function BottomSheet({
   children,
+  onSnapPositionChange,
   ...props
-}: WebComponentProps<BottomSheetElement>) {
+}: WebComponentProps<BottomSheetElement> & {
+  onSnapPositionChange: JSX.IntrinsicElements["bottom-sheet"]["onsnap-position-change"];
+}) {
   return (
     <>
       <bottom-sheet
+        onsnap-position-change={onSnapPositionChange}
         {...props}
         // Need to use `suppressHydrationWarning` to avoid hydration mismatch
-        // because the bottom-sheet component updates its `data-sheet-snap-position`
+        // because the bottom-sheet component updates its `data-sheet-state`
         // attribute during the initial render, which is not reflected in the
         // server-rendered HTML.
         suppressHydrationWarning

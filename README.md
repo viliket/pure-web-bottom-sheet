@@ -477,10 +477,14 @@ using the bottom sheet as an overlay that should always remain visible.
 
 #### Events
 
-- **`snap-position-change`** - type: `CustomEvent<{ snapPosition: string; }>`  
-  Notifies that the sheet snap position has changed. Positions: `"0"` indicates
-  a fully expanded position, `"2"` indicates a fully collapsed (closed) position,
-  and `"1"` indicates an intermediate position.
+- **`snap-position-change`** - type: `CustomEvent<{ sheetState: "collapsed" | "partially-expanded" | "expanded"; snapIndex: number; }>`  
+  Notifies that the sheet snap position has changed. Snap index 0 corresponds to
+  the collapsed state. The `sheetState` is one of the following:
+  - `"collapsed"` - The bottom sheet is collapsed (i.e., snapped to the bottom).
+  - `"partially-expanded"` - The bottom sheet is snapped to one of the intermediate
+    snap points defined by the user.
+  - `"expanded"` - The bottom sheet is fully expanded (i.e., snapped to the full
+    height).
 
 ### `<bottom-sheet-dialog-manager>`: A utility element for the native `<dialog>` element to use the `<bottom-sheet>` element as a dialog
 
