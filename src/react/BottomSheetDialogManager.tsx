@@ -1,21 +1,15 @@
-import {
-  bottomSheetDialogManagerTemplate,
-  BottomSheetDialogManager as BottomSheetDialogManagerElement,
-} from "../web/index.ssr";
+import { BottomSheetEvents } from "../web/bottom-sheet";
+import { bottomSheetDialogManagerTemplate } from "../web/index.ssr";
 import Client from "./Client";
+import { CustomElementProps } from "./custom-element-props";
 import ShadowRootTemplate from "./ShadowRootTemplate";
 
-type ElementProps<I> = Partial<Omit<I, keyof HTMLElement>>;
-export type WebComponentProps<I extends HTMLElement> = React.DetailedHTMLProps<
-  React.HTMLAttributes<I>,
-  I
-> &
-  ElementProps<I>;
+type BottomSheetDialogManagerProps = CustomElementProps<{}, BottomSheetEvents>;
 
 declare module "react/jsx-runtime" {
   namespace JSX {
     interface IntrinsicElements {
-      "bottom-sheet-dialog-manager": WebComponentProps<BottomSheetDialogManagerElement>;
+      "bottom-sheet-dialog-manager": BottomSheetDialogManagerProps;
     }
   }
 }
@@ -23,7 +17,7 @@ declare module "react/jsx-runtime" {
 export default function BottomSheetDialogManager({
   children,
   ...props
-}: WebComponentProps<BottomSheetDialogManagerElement>) {
+}: BottomSheetDialogManagerProps) {
   return (
     <>
       <bottom-sheet-dialog-manager {...props}>

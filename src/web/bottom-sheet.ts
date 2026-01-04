@@ -19,6 +19,17 @@ declare var ScrollTimeline: {
   new ({ source, axis }: { source: Element; axis: string }): ScrollTimeline;
 };
 
+/**
+ * BottomSheet custom element.
+ *
+ * @example
+ * // Register in TypeScript for proper type checking:
+ * declare global {
+ *   interface HTMLElementTagNameMap {
+ *     "bottom-sheet": BottomSheet;
+ *   }
+ * }
+ */
 export class BottomSheet extends HTMLElement {
   static observedAttributes = ["nested-scroll-optimization"];
   #observer: IntersectionObserver | null = null;
@@ -132,7 +143,7 @@ export class BottomSheet extends HTMLElement {
   #updateSnapPosition(position: string) {
     this.dataset.sheetSnapPosition = position;
     this.dispatchEvent(
-      new CustomEvent<{ snapPosition: string }>("snap-position-change", {
+      new CustomEvent<SnapPositionChangeEventDetail>("snap-position-change", {
         detail: {
           snapPosition: position,
         },
@@ -332,19 +343,7 @@ export class BottomSheet extends HTMLElement {
   }
 }
 
-/**
- * Interface for the bottom-sheet custom element.
- * Provides type definitions for its custom properties.
- *
- * @example
- * // Register in TypeScript for proper type checking:
- * declare global {
- *   interface HTMLElementTagNameMap {
- *     "bottom-sheet": BottomSheet;
- *   }
- * }
- */
-export interface BottomSheet extends HTMLElement {
+export interface BottomSheetHTMLAttributes {
   /**
    * When set, the bottom sheet maximum height is based on the the height of its
    * contents.
@@ -371,3 +370,11 @@ export interface BottomSheet extends HTMLElement {
    */
   ["swipe-to-dismiss"]?: boolean;
 }
+
+export interface SnapPositionChangeEventDetail {
+  snapPosition: string;
+}
+
+export type BottomSheetEvents = {
+  "snap-position-change": CustomEvent<SnapPositionChangeEventDetail>;
+};

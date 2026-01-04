@@ -63,11 +63,6 @@ export default [
         htmlnano: { collapseWhitespace: "aggressive", minifyCss: false },
         cssnano: { preset: "default" },
       }),
-      terser({
-        compress: {
-          directives: false,
-        },
-      }),
       preserveDirectives(),
     ],
   },
@@ -89,6 +84,7 @@ export default [
         tsconfig: "tsconfig.json",
       }),
       dts({
+        processor: "vue",
         tsconfigPath: "./tsconfig.json",
         exclude: ["rollup.config.ts"],
       }),
@@ -96,11 +92,6 @@ export default [
         htmlnano: { collapseWhitespace: "aggressive", minifyCss: false },
         cssnano: { preset: "default" },
         postcssNesting: {},
-      }),
-      terser({
-        compress: {
-          directives: false,
-        },
       }),
     ],
   },
