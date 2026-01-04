@@ -9,7 +9,12 @@ export default function Page() {
         <h1>Non-dismissible bottom sheet (Next.js Pages Router)</h1>
       </section>
       <DummyContent />
-      <BottomSheet tabIndex={0}>
+      <BottomSheet
+        tabIndex={0}
+        onsnap-position-change={(e) =>
+          console.log("Snap position changed:", e.detail)
+        }
+      >
         <div slot="snap" style={{ "--snap": "25%" }} />
         <div slot="snap" style={{ "--snap": "50%" }} className="initial" />
         <div slot="snap" style={{ "--snap": "75%" }} />
