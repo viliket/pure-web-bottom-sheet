@@ -1,2 +1,2 @@
-export { default as VBottomSheet } from "./VBottomSheet.vue";
-export { default as VBottomSheetDialogManager } from "./VBottomSheetDialogManager.vue";
+export { default as VBottomSheet } from "./VBottomSheet";
+export { default as VBottomSheetDialogManager } from "./VBottomSheetDialogManager";

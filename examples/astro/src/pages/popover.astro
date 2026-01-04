@@ -159,14 +159,17 @@ import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
 </style>
 
 <script>
-  import { BottomSheet } from "pure-web-bottom-sheet";
+  import {
+    BottomSheet,
+    type SnapPositionChangeEventDetail,
+  } from "pure-web-bottom-sheet";
   customElements.define("bottom-sheet", BottomSheet);
 
   Array.from(document.getElementsByTagName("bottom-sheet")).forEach(
     (bottomSheet) =>
       bottomSheet.addEventListener(
         "snap-position-change",
-        (event: CustomEventInit<{ snapPosition: string }> & Event) => {
+        (event: CustomEventInit<SnapPositionChangeEventDetail> & Event) => {
           if (
             event.detail?.snapPosition == "2" &&
             event.target instanceof HTMLElement &&
