@@ -1,8 +1,8 @@
 <template>
   <section>
     <h1>Modal bottom sheet (using dialog)</h1>
-    <button @click="dialog.showModal()">Open as modal</button>
-    <button @click="dialog.show()">Open as non-modal</button>
+    <button @click="dialog?.showModal()">Open as modal</button>
+    <button @click="dialog?.show()">Open as non-modal</button>
     <DummyContent />
     <VBottomSheetDialogManager>
       <dialog ref="bottom-sheet-dialog">
@@ -22,7 +22,7 @@
     </VBottomSheetDialogManager>
   </section>
 </template>
-<script setup>
+<script setup lang="ts">
 import {
   VBottomSheet,
   VBottomSheetDialogManager,

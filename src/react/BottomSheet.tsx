@@ -1,29 +1,24 @@
-import {
-  bottomSheetTemplate,
-  BottomSheet as BottomSheetElement,
-} from "../web/index.ssr";
+import { BottomSheetHTMLAttributes } from "../web/bottom-sheet";
+import { BottomSheetEvents } from "../web/index.client";
+import { bottomSheetTemplate } from "../web/index.ssr";
 import Client from "./Client";
+import { CustomElementProps } from "./custom-element-props";
 import ShadowRootTemplate from "./ShadowRootTemplate";
 
-type ElementProps<I> = Partial<Omit<I, keyof HTMLElement>>;
-export type WebComponentProps<I extends HTMLElement> = React.DetailedHTMLProps<
-  React.HTMLAttributes<HTMLElement>,
-  HTMLElement
-> &
-  ElementProps<I>;
+type BottomSheetProps = CustomElementProps<
+  BottomSheetHTMLAttributes,
+  BottomSheetEvents
+>;
 
 declare module "react/jsx-runtime" {
   namespace JSX {
     interface IntrinsicElements {
-      "bottom-sheet": WebComponentProps<BottomSheetElement>;
+      "bottom-sheet": BottomSheetProps;
     }
   }
 }
 
-export default function BottomSheet({
-  children,
-  ...props
-}: WebComponentProps<BottomSheetElement>) {
+export default function BottomSheet({ children, ...props }: BottomSheetProps) {
   return (
     <>
       <bottom-sheet
