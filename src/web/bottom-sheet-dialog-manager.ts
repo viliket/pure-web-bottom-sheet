@@ -1,3 +1,4 @@
+import { SnapPositionChangeEventDetail } from "./bottom-sheet";
 import { template } from "./bottom-sheet-dialog-manager.template";
 
 export class BottomSheetDialogManager extends HTMLElement {
@@ -25,7 +26,7 @@ export class BottomSheetDialogManager extends HTMLElement {
     });
     this.addEventListener(
       "snap-position-change",
-      (event: CustomEventInit<{ snapPosition: string }> & Event) => {
+      (event: CustomEventInit<SnapPositionChangeEventDetail> & Event) => {
         if (event.detail) {
           this.dataset.sheetSnapPosition = event.detail.snapPosition;
         }
