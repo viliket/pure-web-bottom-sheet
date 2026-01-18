@@ -1,4 +1,4 @@
-import type { SnapPositionChangeEventDetail } from "./bottom-sheet";
+import { SnapPositionChangeEventDetail } from "./bottom-sheet";
 import { template } from "./bottom-sheet-dialog-manager.template";
 
 export class BottomSheetDialogManager extends HTMLElement {

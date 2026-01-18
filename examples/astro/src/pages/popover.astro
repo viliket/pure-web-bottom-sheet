@@ -159,7 +159,10 @@ import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
 </style>
 
 <script>
-  import { BottomSheet, type SnapPositionChangeEventDetail } from "pure-web-bottom-sheet";
+  import {
+    BottomSheet,
+    type SnapPositionChangeEventDetail,
+  } from "pure-web-bottom-sheet";
   customElements.define("bottom-sheet", BottomSheet);
 
   Array.from(document.getElementsByTagName("bottom-sheet")).forEach(

@@ -83,6 +83,7 @@
     "examples/*"
   ],
   "peerDependencies": {
+    "@vue/language-core": "~3.0.10",
     "react": "^19.0.0",
     "vue": "^3.0.0"
   },
