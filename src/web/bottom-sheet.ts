@@ -152,9 +152,7 @@ export class BottomSheet extends HTMLElement {
       },
     );
 
-    const sentinels = this.#shadow.querySelectorAll(
-      '.sentinel:not([data-snap="past-top"])',
-    );
+    const sentinels = this.#shadow.querySelectorAll(".sentinel");
     Array.from(sentinels).forEach((sentinel) => {
       this.#observer?.observe(sentinel);
     });
@@ -190,51 +188,57 @@ export class BottomSheet extends HTMLElement {
   }
 
   #updateSnapPosition(newSnapTarget: Element) {
-    const snapSlot =
-      this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]')!;
-    const snapSlotHasAssignedExplicitTop =
-      snapSlot.assignedElements().at(0)?.getAttribute("data-snap") === "top";
+    const snapState = this.#calculateSnapState(newSnapTarget);
+    if (!snapState) return;
 
-    let snapIndex: number;
-    let sheetState: SheetState;
-    if (newSnapTarget.matches('[slot="snap"]')) {
-      snapIndex =
-        snapSlot.assignedElements().length -
-        snapSlot.assignedElements().indexOf(newSnapTarget);
-      sheetState = "partially-expanded";
-    } else {
-      switch (newSnapTarget.getAttribute("data-snap")) {
-        case "top":
-        default: // "snap" slot fallback --snap: 100% is identical to top snap point
-          snapIndex =
-            snapSlot.assignedElements().length +
-            (snapSlotHasAssignedExplicitTop ? 0 : 1);
-          sheetState = "expanded";
-          break;
-        case "bottom":
-          snapIndex = 0;
-          sheetState = "collapsed";
-          break;
-      }
-    }
+    const { snapIndex, sheetState } = snapState;
 
+    // Prevent duplicate events when top snap point and .sheet element resolve to same index
     if (this.#currentSnapIndex === snapIndex) {
       return;
     }
 
     this.#currentSnapIndex = snapIndex;
-
     this.dataset.sheetState = sheetState;
+
     this.dispatchEvent(
       new CustomEvent<SnapPositionChangeEventDetail>("snap-position-change", {
-        detail: {
-          sheetState,
-          snapIndex,
-        },
+        detail: { sheetState, snapIndex },
         bubbles: true,
         composed: true,
       }),
     );
+  }
+
+  #calculateSnapState(
+    snapTarget: Element,
+  ): { snapIndex: number; sheetState: SheetState } | null {
+    const snapSlot =
+      this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]');
+    if (!snapSlot) return null;
+
+    const assignedSnapPoints = snapSlot.assignedElements();
+
+    const hasTopSnapPoint =
+      assignedSnapPoints.at(0)?.classList.contains("top") ?? false;
+
+    // Snapped on the .snap.snap-bottom element
+    if (snapTarget.getAttribute("data-snap") === "bottom") {
+      return { snapIndex: 0, sheetState: "collapsed" };
+    }
+
+    // Snapped on one of the snap points assigned to the "snap" slot
+    if (snapTarget.matches('[slot="snap"]')) {
+      const position = assignedSnapPoints.indexOf(snapTarget);
+      const snapIndex = assignedSnapPoints.length - position;
+      const isTopSnapPoint = snapTarget.classList.contains("top");
+      const sheetState = isTopSnapPoint ? "expanded" : "partially-expanded";
+      return { snapIndex, sheetState };
+    }
+
+    // Snapped either on the .sheet element or on the "snap" slot fallback element
+    const snapIndex = assignedSnapPoints.length + (hasTopSnapPoint ? 0 : 1);
+    return { snapIndex, sheetState: "expanded" };
   }
 
   #handleScroll() {
