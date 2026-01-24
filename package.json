@@ -1,6 +1,6 @@
 {
   "name": "pure-web-bottom-sheet",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A performant, lightweight, and accessible bottom sheet web component powered by CSS scroll snap and CSS scroll-driven animations. Works with any framework, supports SSR, multiple snap points, and nested scrolling mode.",
   "keywords": [
     "bottom sheet",

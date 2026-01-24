@@ -71,7 +71,6 @@ export class BottomSheet extends HTMLElement {
       this.addEventListener("scroll", this.#handleScroll);
       this.#handleScroll();
     }
-    this.#setupScrolledPastTopObserver();
   }
 
   connectedCallback() {
@@ -84,41 +83,6 @@ export class BottomSheet extends HTMLElement {
       "resize",
       this.#handleViewportResize,
     );
-  }
-
-  #setupScrolledPastTopObserver() {
-    const scrolledPastTopObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            this.dataset.scrolledPastTop = "";
-          } else {
-            delete this.dataset.scrolledPastTop;
-          }
-        });
-      },
-      {
-        root: this,
-        rootMargin: "1000% 0px -100% 0px",
-      },
-    );
-    const pastTopSentinel = this.#shadow.querySelector(
-      '.sentinel[data-snap="past-top"]',
-    );
-    if (pastTopSentinel) {
-      scrolledPastTopObserver.observe(pastTopSentinel);
-    }
-    if ("onscrollend" in window) {
-      this.addEventListener("scrollend", () => {
-        // When we have scrolled past top we need to separately update
-        // the snap position after scroll end because "scrolled-past-top"
-        // temporarily removes scroll snapping and we would not get the
-        // usual scrollsnapchange event when scrolling ends past top
-        if ("scrolledPastTop" in this.dataset && pastTopSentinel) {
-          this.#updateSnapPosition(pastTopSentinel);
-        }
-      });
-    }
   }
 
   #setupIntersectionObserver() {

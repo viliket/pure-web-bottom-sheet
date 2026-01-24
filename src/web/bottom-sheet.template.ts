@@ -44,19 +44,6 @@ const styles = css`
     }
   }
 
-  /* 
-    Disable snap alignment when sheet has reached the top and being scrolled
-    to prevent snapping back to the top when the user scrolls the sheet on
-    certain browsers (e.g. Firefox).
-  */
-  :host([data-scrolled-past-top]) {
-    .sheet,
-    .snap::before,
-    ::slotted([slot="snap"])::before {
-      scroll-snap-align: none;
-    }
-  }
-
   .snap,
   ::slotted([slot="snap"]) {
     position: relative;
@@ -103,9 +90,6 @@ const styles = css`
     &[data-snap="top"] {
       top: -1px; /** Extra -1px needed for Safari */
     }
-    &[data-snap="past-top"] {
-      top: 2px; /** Extra +1px needed for Safari */
-    }
     &[data-snap="bottom"] {
       top: 1px;
     }
@@ -124,6 +108,19 @@ const styles = css`
     overflow: clip;
     scroll-snap-align: var(--snap-point-align, start);
     pointer-events: all;
+  }
+
+  /* 
+    Needed for Safari/Firefox to prevent abrupt scroll re-snapping in case the
+    sheet DOM content is dynamically changed. Without this, these browsers would
+    re-snap to the start of the .sheet element.
+    See related spec: https://drafts.csswg.org/css-scroll-snap-1/#re-snap
+  */
+  .sheet::after {
+    display: block;
+    position: static;
+    scroll-snap-align: var(--snap-point-align, end);
+    content: "";
   }
 
   .sheet-header {
@@ -433,7 +430,6 @@ export const template: string = /* HTML */ `
   <div class="sentinel" data-snap="top"></div>
   <div class="sheet-wrapper">
     <aside class="sheet" part="sheet" data-snap="top">
-      <div class="sentinel" data-snap="past-top"></div>
       <header class="sheet-header" part="header">
         <div class="handle" part="handle"></div>
         <slot name="header"></slot>
