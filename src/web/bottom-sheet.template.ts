@@ -116,7 +116,7 @@ const styles = css`
     re-snap to the start of the .sheet element.
     See related spec: https://drafts.csswg.org/css-scroll-snap-1/#re-snap
   */
-  .sheet::after {
+  :host(:not([nested-scroll])) .sheet::after {
     display: block;
     position: static;
     scroll-snap-align: var(--snap-point-align, end);
