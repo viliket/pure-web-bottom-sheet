@@ -32,7 +32,6 @@ declare var ScrollTimeline: {
  */
 export class BottomSheet extends HTMLElement {
   static observedAttributes = ["nested-scroll-optimization"];
-  #observer: IntersectionObserver | null = null;
   #handleViewportResize = () => {
     this.style.setProperty(
       "--sw-keyboard-height",
@@ -40,6 +39,7 @@ export class BottomSheet extends HTMLElement {
     );
   };
   #shadow: ShadowRoot;
+  #cleanupIntersectionObserver: (() => void) | null = null;
   #cleanupNestedScrollResizeOptimization: (() => void) | null = null;
   #currentSnapIndex: number | null = null;
 
@@ -100,7 +100,7 @@ export class BottomSheet extends HTMLElement {
     const getDistanceToObserverBottom = (entry: IntersectionObserverEntry) =>
       Math.abs(entry.intersectionRect.top - (entry.rootBounds?.bottom ?? 0));
 
-    this.#observer = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
         // Add intersecting entries to the set sorted by proximity to the host's top
         // which is the point where snapping occurs because we use `scroll-snap-align: start`
@@ -154,7 +154,7 @@ export class BottomSheet extends HTMLElement {
 
     const sentinels = this.#shadow.querySelectorAll(".sentinel");
     Array.from(sentinels).forEach((sentinel) => {
-      this.#observer?.observe(sentinel);
+      observer.observe(sentinel);
     });
 
     let observedSnapPoints: Element[] = [];
@@ -165,18 +165,22 @@ export class BottomSheet extends HTMLElement {
       // Unobserve elements no longer assigned to the slot
       observedSnapPoints.forEach((el) => {
         if (!snapPointsSet.has(el)) {
-          this.#observer?.unobserve(el);
+          observer.unobserve(el);
         }
       });
 
-      snapPoints.forEach((el) => {
-        this.#observer?.observe(el);
-      });
+      snapPoints.forEach((el) => observer.observe(el));
 
       observedSnapPoints = snapPoints;
     };
     snapSlot.addEventListener("slotchange", observeSnapPoints);
     observeSnapPoints();
+
+    this.#cleanupIntersectionObserver = () => {
+      snapSlot.removeEventListener("slotchange", observeSnapPoints);
+      observer.disconnect();
+      this.#cleanupIntersectionObserver = null;
+    };
   }
 
   #handleScrollSnapChange(event: Event) {
@@ -423,7 +427,7 @@ export class BottomSheet extends HTMLElement {
   }
 
   disconnectedCallback() {
-    this.#observer?.disconnect();
+    this.#cleanupIntersectionObserver?.();
     window.visualViewport?.removeEventListener(
       "resize",
       this.#handleViewportResize,
