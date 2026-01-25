@@ -157,14 +157,13 @@ export class BottomSheet extends HTMLElement {
       observer.observe(sentinel);
     });
 
-    let observedSnapPoints: Element[] = [];
+    let observedSnapPoints = new Set<Element>();
     const observeSnapPoints = () => {
-      const snapPoints = snapSlot.assignedElements();
-      const snapPointsSet = new Set(snapPoints);
+      const snapPoints = new Set(snapSlot.assignedElements());
 
       // Unobserve elements no longer assigned to the slot
       observedSnapPoints.forEach((el) => {
-        if (!snapPointsSet.has(el)) {
+        if (!snapPoints.has(el)) {
           observer.unobserve(el);
         }
       });
@@ -227,7 +226,10 @@ export class BottomSheet extends HTMLElement {
       assignedSnapPoints.at(0)?.classList.contains("top") ?? false;
 
     // Snapped on the .snap.snap-bottom element
-    if (snapTarget.getAttribute("data-snap") === "bottom") {
+    if (
+      snapTarget instanceof HTMLElement &&
+      snapTarget.dataset.snap === "bottom"
+    ) {
       return { snapIndex: 0, sheetState: "collapsed" };
     }
 
@@ -463,10 +465,24 @@ export interface BottomSheetHTMLAttributes {
   ["swipe-to-dismiss"]?: boolean;
 }
 
-type SheetState = "collapsed" | "partially-expanded" | "expanded";
+/**
+ * Represents the current state of the bottom sheet.
+ * - `collapsed`: Sheet is fully collapsed (closed/minimized)
+ * - `partially-expanded`: Sheet is at an intermediate snap point
+ * - `expanded`: Sheet is fully expanded to its maximum height
+ */
+export type SheetState = "collapsed" | "partially-expanded" | "expanded";
 
+/**
+ * Detail object for the `snap-position-change` custom event.
+ */
 export interface SnapPositionChangeEventDetail {
+  /** The semantic state of the sheet */
   sheetState: SheetState;
+  /**
+   * The index of the current snap point (0 = collapsed,
+   * higher values = more expanded, with the highest being fully expanded)
+   */
   snapIndex: number;
 }
 
