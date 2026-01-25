@@ -26,9 +26,9 @@ export default function Page() {
       <BottomSheetDialogManager>
         <dialog ref={dialog}>
           <BottomSheet swipe-to-dismiss tabIndex={0}>
-            <div slot="snap" style={{ "--snap": "25%" }} />
-            <div slot="snap" style={{ "--snap": "50%" }} className="initial" />
             <div slot="snap" style={{ "--snap": "75%" }} />
+            <div slot="snap" style={{ "--snap": "50%" }} className="initial" />
+            <div slot="snap" style={{ "--snap": "25%" }} />
             <div slot="header">
               <h2>Custom header</h2>
             </div>

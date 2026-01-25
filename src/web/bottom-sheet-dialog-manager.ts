@@ -28,10 +28,10 @@ export class BottomSheetDialogManager extends HTMLElement {
       "snap-position-change",
       (event: CustomEventInit<SnapPositionChangeEventDetail> & Event) => {
         if (event.detail) {
-          this.dataset.sheetSnapPosition = event.detail.snapPosition;
+          this.dataset.sheetState = event.detail.sheetState;
         }
         if (
-          event.detail?.snapPosition == "2" &&
+          event.detail?.sheetState == "collapsed" &&
           event.target instanceof HTMLElement &&
           event.target.hasAttribute("swipe-to-dismiss") &&
           event.target.checkVisibility()

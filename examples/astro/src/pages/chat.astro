@@ -174,7 +174,7 @@ import SheetConfigPanel from "../components/SheetConfigPanel.astro";
     background: rgba(0, 0, 0, 0.5);
   }
 
-  dialog:not([open]):has(> bottom-sheet[data-sheet-snap-position="2"]) {
+  dialog:not([open]):has(> bottom-sheet[data-sheet-state="collapsed"]) {
     transition: none;
   }
 

@@ -153,7 +153,7 @@ import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
     display: none;
   }
 
-  bottom-sheet[popover][data-sheet-snap-position="2"]:not(:popover-open) {
+  bottom-sheet[popover][data-sheet-state="collapsed"]:not(:popover-open) {
     transition: none;
   }
 </style>
@@ -171,7 +171,7 @@ import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
         "snap-position-change",
         (event: CustomEventInit<SnapPositionChangeEventDetail> & Event) => {
           if (
-            event.detail?.snapPosition == "2" &&
+            event.detail?.sheetState == "collapsed" &&
             event.target instanceof HTMLElement &&
             event.target.hasAttribute("swipe-to-dismiss") &&
             event.target.checkVisibility() &&

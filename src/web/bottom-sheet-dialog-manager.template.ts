@@ -38,7 +38,7 @@ const styles = css`
       display var(--display-transition-duration, 0.5s) ease-out allow-discrete;
   }
 
-  :host([data-sheet-snap-position="2"]) ::slotted(dialog:not([open])) {
+  :host([data-sheet-state="collapsed"]) ::slotted(dialog:not([open])) {
     transition: none;
   }
 

@@ -32,7 +32,6 @@ declare var ScrollTimeline: {
  */
 export class BottomSheet extends HTMLElement {
   static observedAttributes = ["nested-scroll-optimization"];
-  #observer: IntersectionObserver | null = null;
   #handleViewportResize = () => {
     this.style.setProperty(
       "--sw-keyboard-height",
@@ -40,7 +39,9 @@ export class BottomSheet extends HTMLElement {
     );
   };
   #shadow: ShadowRoot;
+  #cleanupIntersectionObserver: (() => void) | null = null;
   #cleanupNestedScrollResizeOptimization: (() => void) | null = null;
+  #currentSnapIndex: number | null = null;
 
   constructor() {
     super();
@@ -85,50 +86,100 @@ export class BottomSheet extends HTMLElement {
   }
 
   #setupIntersectionObserver() {
-    this.#observer = new IntersectionObserver(
+    const snapSlot =
+      this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]');
+    const bottomSnapTarget = this.#shadow.querySelector(
+      '.sentinel[data-snap="bottom"]',
+    );
+
+    if (!snapSlot || !bottomSnapTarget) return;
+
+    const intersectingTargets = new Set<Element>();
+    let previousSnapTarget: Element | null = null;
+
+    const getDistanceToObserverBottom = (entry: IntersectionObserverEntry) =>
+      Math.abs(entry.intersectionRect.top - (entry.rootBounds?.bottom ?? 0));
+
+    const observer = new IntersectionObserver(
       (entries) => {
-        let lowestIntersectingSnap = Infinity;
-        let highestNonIntersectingSnap = -Infinity;
-        let hasIntersectingElement = false;
-
-        for (const entry of entries) {
-          if (
-            !(entry.target instanceof HTMLElement) ||
-            entry.target.dataset.snap == null
-          ) {
-            continue;
-          }
-
-          const snap = Number.parseInt(entry.target.dataset.snap);
-
-          if (entry.isIntersecting) {
-            hasIntersectingElement = true;
-            lowestIntersectingSnap = Math.min(lowestIntersectingSnap, snap);
-          } else {
-            highestNonIntersectingSnap = Math.max(
-              highestNonIntersectingSnap,
-              snap,
+        // Add intersecting entries to the set sorted by proximity to the host's top
+        // which is the point where snapping occurs because we use `scroll-snap-align: start`
+        entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => {
+            return (
+              getDistanceToObserverBottom(b) - getDistanceToObserverBottom(a)
             );
-          }
+          })
+          .forEach((entry) => {
+            intersectingTargets.add(entry.target);
+          });
+
+        entries
+          .filter((entry) => !entry.isIntersecting)
+          .forEach((entry) => {
+            intersectingTargets.delete(entry.target);
+          });
+
+        const currentTarget = Array.from(intersectingTargets).at(-1);
+
+        // Skip if same as previous or if current target is bottom snap target
+        // (bottom snap target needs to be handled separately)
+        if (
+          currentTarget === bottomSnapTarget ||
+          currentTarget === previousSnapTarget
+        ) {
+          return;
         }
 
-        const newSnapPosition = hasIntersectingElement
-          ? lowestIntersectingSnap
-          : highestNonIntersectingSnap + 1;
+        // Handle case where none of the targets intersect (fully collapsed state)
+        if (!currentTarget) {
+          if (!this.hasAttribute("swipe-to-dismiss")) {
+            return;
+          }
+          // Use bottom target when nothing intersects and swipe-to-dismiss is enabled
+          previousSnapTarget = bottomSnapTarget;
+          this.#updateSnapPosition(bottomSnapTarget);
+          return;
+        }
 
-        this.#updateSnapPosition(newSnapPosition.toString());
+        previousSnapTarget = currentTarget;
+        this.#updateSnapPosition(currentTarget);
       },
       {
         root: this,
-        threshold: 0,
         rootMargin: "1000% 0px -100% 0px",
       },
     );
 
     const sentinels = this.#shadow.querySelectorAll(".sentinel");
     Array.from(sentinels).forEach((sentinel) => {
-      this.#observer?.observe(sentinel);
+      observer.observe(sentinel);
     });
+
+    let observedSnapPoints = new Set<Element>();
+    const observeSnapPoints = () => {
+      const snapPoints = new Set(snapSlot.assignedElements());
+
+      // Unobserve elements no longer assigned to the slot
+      observedSnapPoints.forEach((el) => {
+        if (!snapPoints.has(el)) {
+          observer.unobserve(el);
+        }
+      });
+
+      snapPoints.forEach((el) => observer.observe(el));
+
+      observedSnapPoints = snapPoints;
+    };
+    snapSlot.addEventListener("slotchange", observeSnapPoints);
+    observeSnapPoints();
+
+    this.#cleanupIntersectionObserver = () => {
+      snapSlot.removeEventListener("slotchange", observeSnapPoints);
+      observer.disconnect();
+      this.#cleanupIntersectionObserver = null;
+    };
   }
 
   #handleScrollSnapChange(event: Event) {
@@ -136,21 +187,64 @@ export class BottomSheet extends HTMLElement {
     if (!(snapEvent.snapTargetBlock instanceof HTMLElement)) {
       return;
     }
-    const newSnapPosition = snapEvent.snapTargetBlock.dataset.snap ?? "1";
-    this.#updateSnapPosition(newSnapPosition);
+    this.#updateSnapPosition(snapEvent.snapTargetBlock);
   }
 
-  #updateSnapPosition(position: string) {
-    this.dataset.sheetSnapPosition = position;
+  #updateSnapPosition(newSnapTarget: Element) {
+    const snapState = this.#calculateSnapState(newSnapTarget);
+    if (!snapState) return;
+
+    const { snapIndex, sheetState } = snapState;
+
+    // Prevent duplicate events when top snap point and .sheet element resolve to same index
+    if (this.#currentSnapIndex === snapIndex) {
+      return;
+    }
+
+    this.#currentSnapIndex = snapIndex;
+    this.dataset.sheetState = sheetState;
+
     this.dispatchEvent(
       new CustomEvent<SnapPositionChangeEventDetail>("snap-position-change", {
-        detail: {
-          snapPosition: position,
-        },
+        detail: { sheetState, snapIndex },
         bubbles: true,
         composed: true,
       }),
     );
+  }
+
+  #calculateSnapState(
+    snapTarget: Element,
+  ): { snapIndex: number; sheetState: SheetState } | null {
+    const snapSlot =
+      this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]');
+    if (!snapSlot) return null;
+
+    const assignedSnapPoints = snapSlot.assignedElements();
+
+    const hasTopSnapPoint =
+      assignedSnapPoints.at(0)?.classList.contains("top") ?? false;
+
+    // Snapped on the .snap.snap-bottom element
+    if (
+      snapTarget instanceof HTMLElement &&
+      snapTarget.dataset.snap === "bottom"
+    ) {
+      return { snapIndex: 0, sheetState: "collapsed" };
+    }
+
+    // Snapped on one of the snap points assigned to the "snap" slot
+    if (snapTarget.matches('[slot="snap"]')) {
+      const position = assignedSnapPoints.indexOf(snapTarget);
+      const snapIndex = assignedSnapPoints.length - position;
+      const isTopSnapPoint = snapTarget.classList.contains("top");
+      const sheetState = isTopSnapPoint ? "expanded" : "partially-expanded";
+      return { snapIndex, sheetState };
+    }
+
+    // Snapped either on the .sheet element or on the "snap" slot fallback element
+    const snapIndex = assignedSnapPoints.length + (hasTopSnapPoint ? 0 : 1);
+    return { snapIndex, sheetState: "expanded" };
   }
 
   #handleScroll() {
@@ -335,7 +429,7 @@ export class BottomSheet extends HTMLElement {
   }
 
   disconnectedCallback() {
-    this.#observer?.disconnect();
+    this.#cleanupIntersectionObserver?.();
     window.visualViewport?.removeEventListener(
       "resize",
       this.#handleViewportResize,
@@ -371,8 +465,25 @@ export interface BottomSheetHTMLAttributes {
   ["swipe-to-dismiss"]?: boolean;
 }
 
+/**
+ * Represents the current state of the bottom sheet.
+ * - `collapsed`: Sheet is fully collapsed (closed/minimized)
+ * - `partially-expanded`: Sheet is at an intermediate snap point
+ * - `expanded`: Sheet is fully expanded to its maximum height
+ */
+export type SheetState = "collapsed" | "partially-expanded" | "expanded";
+
+/**
+ * Detail object for the `snap-position-change` custom event.
+ */
 export interface SnapPositionChangeEventDetail {
-  snapPosition: string;
+  /** The semantic state of the sheet */
+  sheetState: SheetState;
+  /**
+   * The index of the current snap point (0 = collapsed,
+   * higher values = more expanded, with the highest being fully expanded)
+   */
+  snapIndex: number;
 }
 
 export type BottomSheetEvents = {
