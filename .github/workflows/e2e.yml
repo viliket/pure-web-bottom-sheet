@@ -1,0 +1,54 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Not using ARM64 Ubuntu runner for chrome for now since chromedriver seems
+          # to have an issue starting a session on ARM64 runner
+          - os: ubuntu-24.04
+            browser: chrome
+          - os: ubuntu-24.04-arm
+            browser: firefox
+          - os: ubuntu-24.04-arm
+            browser: minibrowser
+          - os: macos-26
+            browser: safari
+    runs-on: ${{ matrix.os }}
+    name: E2E (${{ matrix.browser }} / ${{ matrix.os }})
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: "package.json"
+          check-latest: true
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Install WebKitGTK
+        if: matrix.browser == 'minibrowser'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y webkit2gtk-driver
+
+      - name: Run e2e tests
+        if: matrix.browser != 'minibrowser'
+        run: npx wdio run ./wdio.conf.ts
+        env:
+          BROWSERS: ${{ matrix.browser }}
+
+      - name: Run e2e tests (MiniBrowser)
+        if: matrix.browser == 'minibrowser'
+        run: xvfb-run npx wdio run ./wdio.conf.ts
+        env:
+          BROWSERS: minibrowser
