@@ -53,11 +53,38 @@ Pull requests are welcome! **For significant changes, please first create an iss
 - Development: `npm run build`
 - Production: `npm run build:prod`
 
-### Running Examples
+### Running examples
 
 - Astro: `npm run dev -w examples/astro`
 - React/Next.js: `npm run dev -w examples/react-nextjs`
 - Vue/Nuxt: `npm run dev -w examples/vue-nuxt`
+
+### Running tests
+
+End-to-end tests use [WebdriverIO](https://webdriver.io/) and run against the Astro
+example dev server.
+
+```bash
+# Run tests with default browsers (Chrome, Firefox, MiniBrowser)
+npm run test:wdio
+
+# Run tests with specific browsers
+BROWSERS=chrome npm run test:wdio
+BROWSERS=chrome,firefox npm run test:wdio
+
+# Run tests in headless mode
+HEADLESS=true npm run test:wdio
+```
+
+Available browsers: `chrome`, `firefox`, `minibrowser`, `safari`
+
+The tests will use an already running dev server on port 4321 if available, otherwise they start one automatically.
+
+| Environment variable | Description                                                                                 | Default                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `BASE_URL`           | Point tests at a different server (e.g. `https://viliket.github.io/pure-web-bottom-sheet/`) | `http://localhost:<DEV_SERVER_PORT>/pure-web-bottom-sheet/` |
+| `DEV_SERVER_PORT`    | Port for the local dev server                                                               | `4321`                                                      |
+| `WEBKIT_DRIVER_PORT` | Port for the WebKit WebDriver                                                               | `4444`                                                      |
 
 ## Code guidelines
 

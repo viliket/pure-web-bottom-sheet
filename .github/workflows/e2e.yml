@@ -1,0 +1,44 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox, minibrowser]
+    name: E2E (${{ matrix.browser }})
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: "package.json"
+          check-latest: true
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Install WebKitGTK
+        if: matrix.browser == 'minibrowser'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y webkit2gtk-driver
+
+      - name: Run e2e tests
+        if: matrix.browser != 'minibrowser'
+        run: npx wdio run ./wdio.conf.ts
+        env:
+          BROWSERS: ${{ matrix.browser }}
+
+      - name: Run e2e tests (MiniBrowser)
+        if: matrix.browser == 'minibrowser'
+        run: xvfb-run npx wdio run ./wdio.conf.ts
+        env:
+          BROWSERS: minibrowser
