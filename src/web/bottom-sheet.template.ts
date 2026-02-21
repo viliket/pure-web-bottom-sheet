@@ -151,7 +151,7 @@ const styles = css`
   }
 
   :host {
-    animation: initial-snap 0.01s both;
+    animation: initial-snap var(--initial-snap-duration, 0.5s) backwards;
   }
 
   /* Safari overrides */
@@ -163,11 +163,12 @@ const styles = css`
         (display toggles between none and block).
       */
       display: inherit;
-      /* 
-        On Safari the duration must be higher for the initial-snap animation
-        to properly snap to the initial target.
+      /*
+        On Safari, we need to briefly reset scroll-snap-type after the initial snap
+        before re-enabling scroll-snap-align on other snap points to prevent scroll
+        position from being reset to the initial snap point.
       */
-      animation: initial-snap 0.1s both;
+      --snap-type-initial-reset: none;
     }
   }
 
@@ -178,15 +179,26 @@ const styles = css`
     the initial snap point.
   */
   @keyframes initial-snap {
-    0% {
+    /*
+      Phase 1 (0%-49.99%): Disable scroll snapping for all snap points except 
+      the initial snap point. Keep the host scroll-snap-type at the base value
+      (y mandatory) so the browser can snap to the initial snap point during
+      this window.
+    */
+    0%,
+    49.99% {
+      scroll-snap-type: y mandatory;
       --snap-point-align: none;
     }
-    50% {
-      /* 
-        Needed for the iOS Safari
-        See https://stackoverflow.com/q/65653679
-      */
-      scroll-snap-type: initial;
+    /*
+      Phase 2 (50%-100%): On Safari, set the host scroll-snap-type temporarily
+      to none (via --snap-type-initial-reset) to prevent the scroll position resetting
+      when the scroll-snap-align is re-enabled on all snap points after the animation ends.
+      See https://stackoverflow.com/q/65653679
+    */
+    50%,
+    100% {
+      scroll-snap-type: var(--snap-type-initial-reset, y mandatory);
       --snap-point-align: none;
     }
   }

@@ -35,22 +35,11 @@ const styles = css`
     transition:
       translate 0.5s ease-out,
       overlay 0.5s ease-out allow-discrete,
-      display var(--display-transition-duration, 0.5s) ease-out allow-discrete;
+      display 0.5s ease-out allow-discrete;
   }
 
   :host([data-sheet-snap-position="2"]) ::slotted(dialog:not([open])) {
     transition: none;
-  }
-
-  /** Safari overrides */
-  @supports (-webkit-touch-callout: none) or (-webkit-hyphens: none) {
-    ::slotted(dialog) {
-      /* 
-        For Safari we must user shorter duration for display property or otherwise
-        the bottom sheet will not snap properly to the initial target on open.
-      */
-      --display-transition-duration: 0.1s;
-    }
   }
 `;
 
