@@ -200,6 +200,8 @@ const styles = css`
       /* Prevent rubberband effect */
       overscroll-behavior-x: none;
       scrollbar-width: none;
+      /* Prevent horizontal scrolling using touch gestures */
+      touch-action: pan-y pinch-zoom;
 
       &::after {
         display: block;
