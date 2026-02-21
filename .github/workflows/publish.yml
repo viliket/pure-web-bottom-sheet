@@ -19,11 +19,6 @@ jobs:
           check-latest: true
           registry-url: "https://registry.npmjs.org"
 
-      # npm 11.6.2 bundled with Node v24 has a lockfile compatibility bug (https://github.com/npm/cli/issues/8669)
-      # TODO: Remove this step when Node.js ships with npm@11.6.3+
-      - name: Upgrade npm
-        run: npm install --global npm@11.7.0
-
       - run: npm ci
 
       - run: npm run build:prod
