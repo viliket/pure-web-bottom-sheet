@@ -4,6 +4,7 @@ import { BottomSheetDialogManager } from "./bottom-sheet-dialog-manager";
 export { BottomSheet, BottomSheetDialogManager };
 
 export type {
+  SheetState,
   SnapPositionChangeEventDetail,
   BottomSheetEvents,
 } from "./bottom-sheet";
