@@ -218,9 +218,15 @@ export class BottomSheet extends HTMLElement {
       const matrix = new DOMMatrixReadOnly(style.transform);
       const yOffset = -matrix.m42;
       cleanupStyleProperties();
-      requestAnimationFrame(() => {
-        content.scrollTop = yOffset + content.scrollTop;
-      });
+      // Pin the sheet height inline so the content scrollTop update below is based
+      // on the correct scroll height. Removing [data-scrolling] reactivates the
+      // scroll-timeline-driven "expand-sheet-height" animation, which will not
+      // produce a current time until the next layout pass, leaving the sheet height
+      // (and content scroll height) stale for the scrollTop assignment that follows.
+      sheet.style.height = `${(this.scrollTop / (this.scrollHeight - this.offsetHeight)) * 100}%`;
+      content.scrollTop = yOffset + content.scrollTop;
+      // Clear the temporary inline override now that the scrollTop is set
+      sheet.style.height = "";
     };
 
     const handleScroll = () => {
