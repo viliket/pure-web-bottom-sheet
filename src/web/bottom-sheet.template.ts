@@ -247,6 +247,8 @@ const styles = css`
       bottom: 0;
       flex-direction: column;
       justify-content: end;
+      /* Needed for Firefox to properly render sticky items due to using contain: strict */
+      content-visibility: auto;
       /* Fixes scroll-chaining issue on Firefox when sheet content is scrollable */
       contain: strict;
       height: 100%;
@@ -311,13 +313,9 @@ const styles = css`
   }
 
   @supports ((animation-timeline: scroll()) and (animation-range: 0% 100%)) {
-    :host {
-      scroll-timeline: --sheet-timeline y;
-    }
-
     :host([nested-scroll]) .sheet {
       animation: expand-sheet-height linear forwards;
-      animation-timeline: --sheet-timeline;
+      animation-timeline: scroll();
     }
 
     @keyframes expand-sheet-height {
@@ -331,7 +329,7 @@ const styles = css`
 
     :host([nested-scroll][expand-to-scroll]) .sheet-content {
       animation: overflow-y-toggle linear forwards;
-      animation-timeline: --sheet-timeline;
+      animation-timeline: scroll();
     }
 
     @keyframes overflow-y-toggle {
@@ -354,17 +352,17 @@ const styles = css`
         */
         transform: translateY(var(--sheet-timeline-at-scroll-start, 0));
         animation: translate-sheet linear forwards;
-        animation-timeline: --sheet-timeline;
+        animation-timeline: scroll();
       }
 
       .sheet-content {
         animation: translate-sheet-content linear forwards;
-        animation-timeline: --sheet-timeline;
+        animation-timeline: scroll();
       }
 
       .sheet-footer {
         animation: translate-footer linear forwards;
-        animation-timeline: --sheet-timeline;
+        animation-timeline: scroll();
       }
     }
 
