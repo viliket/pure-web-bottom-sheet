@@ -61,9 +61,9 @@ npm install pure-web-bottom-sheet
   <body>
     <bottom-sheet tabindex="0">
       <!-- Snap points -->
-      <div slot="snap" style="--snap: 25%"></div>
-      <div slot="snap" style="--snap: 50%" class="initial"></div>
       <div slot="snap" style="--snap: 75%"></div>
+      <div slot="snap" style="--snap: 50%" class="initial"></div>
+      <div slot="snap" style="--snap: 25%"></div>
 
       <div slot="header">
         <h2>Custom header</h2>
@@ -100,9 +100,9 @@ npm install pure-web-bottom-sheet
       <dialog id="bottom-sheet-dialog">
         <bottom-sheet swipe-to-dismiss tabindex="0">
           <!-- Snap points -->
-          <div slot="snap" style="--snap: 25%"></div>
-          <div slot="snap" style="--snap: 50%" class="initial"></div>
           <div slot="snap" style="--snap: 75%"></div>
+          <div slot="snap" style="--snap: 50%" class="initial"></div>
+          <div slot="snap" style="--snap: 25%"></div>
 
           <div slot="header">
             <h2>Custom header</h2>
@@ -149,9 +149,9 @@ import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
   </template>
 
   {/* Snap points */}
-  <div slot="snap" style="--snap: 25%"></div>
-  <div slot="snap" style="--snap: 50%" class="initial"></div>
   <div slot="snap" style="--snap: 75%"></div>
+  <div slot="snap" style="--snap: 50%" class="initial"></div>
+  <div slot="snap" style="--snap: 25%"></div>
 
   <div slot="header">
     <h2>Custom header</h2>
@@ -188,9 +188,9 @@ import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
       </template>
 
       <!-- Snap points -->
-      <div slot="snap" style="--snap: 25%"></div>
-      <div slot="snap" style="--snap: 50%" class="initial"></div>
       <div slot="snap" style="--snap: 75%"></div>
+      <div slot="snap" style="--snap: 50%" class="initial"></div>
+      <div slot="snap" style="--snap: 25%"></div>
 
       <div slot="header">
         <h2>Custom header</h2>
@@ -232,9 +232,9 @@ import { BottomSheet } from "pure-web-bottom-sheet/react";
 function Example() {
   return (
     <BottomSheet tabIndex={0}>
-      <div slot="snap" style={{ "--snap": "25%" }} />
-      <div slot="snap" style={{ "--snap": "50%" }} className="initial" />
       <div slot="snap" style={{ "--snap": "75%" }} />
+      <div slot="snap" style={{ "--snap": "50%" }} className="initial" />
+      <div slot="snap" style={{ "--snap": "25%" }} />
 
       <div slot="header">
         <h2>Custom header</h2>
@@ -278,9 +278,9 @@ function Example() {
       <BottomSheetDialogManager>
         <dialog ref={dialog}>
           <BottomSheet swipe-to-dismiss tabIndex={0}>
-            <div slot="snap" style={{ "--snap": "25%" }} />
-            <div slot="snap" style={{ "--snap": "50%" }} className="initial" />
             <div slot="snap" style={{ "--snap": "75%" }} />
+            <div slot="snap" style={{ "--snap": "50%" }} className="initial" />
+            <div slot="snap" style={{ "--snap": "25%" }} />
             <div slot="header">
               <h2>Custom header</h2>
             </div>
@@ -309,9 +309,9 @@ use the component and provide SSR support out of the box.
 ```vue
 <template>
   <VBottomSheet tabindex="0">
-    <div slot="snap" style="--snap: 25%"></div>
-    <div slot="snap" style="--snap: 50%" class="initial"></div>
     <div slot="snap" style="--snap: 75%"></div>
+    <div slot="snap" style="--snap: 50%" class="initial"></div>
+    <div slot="snap" style="--snap: 25%"></div>
 
     <div slot="header">
       <h2>Custom header</h2>
@@ -349,9 +349,9 @@ import { VBottomSheet } from "pure-web-bottom-sheet/vue";
           <div slot="footer">
             <h2>Custom footer</h2>
           </div>
-          <div slot="snap" style="--snap: 25%"></div>
-          <div slot="snap" style="--snap: 50%" class="initial"></div>
           <div slot="snap" style="--snap: 75%"></div>
+          <div slot="snap" style="--snap: 50%" class="initial"></div>
+          <div slot="snap" style="--snap: 25%"></div>
           <DummyContent />
         </VBottomSheet>
       </dialog>
@@ -390,9 +390,9 @@ using the bottom sheet as an overlay that should always remain visible.
 ```html
 <bottom-sheet>
   <!-- Snap points -->
-  <div slot="snap" style="--snap: 25%"></div>
-  <div slot="snap" style="--snap: 50%" class="initial"></div>
   <div slot="snap" style="--snap: 75%"></div>
+  <div slot="snap" style="--snap: 50%" class="initial"></div>
+  <div slot="snap" style="--snap: 25%"></div>
 
   <!-- Custom header -->
   <div slot="header">
@@ -446,8 +446,13 @@ using the bottom sheet as an overlay that should always remain visible.
   Defines snap points for positioning the bottom sheet. If not specified, the bottom
   sheet will have a single snap point `--snap: 100%` (maximum
   height). Note that when the `<bottom-sheet>` has the `swipe-to-dismiss` attribute
-  set, it also has a snap point at the bottom of the viewport to allow swiping down
-  to dismiss it.
+  set, it also has an implicit snap point at the bottom of the viewport to allow
+  swiping down to dismiss it.
+
+  Note that the snap points should be placed in the DOM in a top-to-bottom order
+  due to the snap index calculation assuming this order. E.g., `<div slot="snap" style="--snap: 75vh"></div>`
+  should be placed before `<div slot="snap" style="--snap: 50vh"></div>`.
+
   Each snap point element should:
   - Be assigned to this slot
   - Specify the `--snap` custom property to set to the wanted offset from the viewport
@@ -459,6 +464,10 @@ using the bottom sheet as an overlay that should always remain visible.
   - Optionally specify the class `initial` to make the bottom sheet
     initially snap to that point each time it is opened. Note that
     only a single snap point should specify this class.
+  - Optionally specify the class `top` if the snap point represents a fully expanded
+    "top" snap point (i.e., `--snap: 100%`) so that the snap index calculation
+    treats this snap point index equal to the fully expanded sheet position.
+
 - **`header`** (optional)  
   Optional header content that is displayed at the top of the bottom sheet.
 - **`footer`** (optional)  
@@ -477,10 +486,14 @@ using the bottom sheet as an overlay that should always remain visible.
 
 #### Events
 
-- **`snap-position-change`** - type: `CustomEvent<{ snapPosition: string; }>`  
-  Notifies that the sheet snap position has changed. Positions: `"0"` indicates
-  a fully expanded position, `"2"` indicates a fully collapsed (closed) position,
-  and `"1"` indicates an intermediate position.
+- **`snap-position-change`** - type: `CustomEvent<{ sheetState: "collapsed" | "partially-expanded" | "expanded"; snapIndex: number; }>`  
+  Notifies that the sheet snap position has changed. Snap index 0 corresponds to
+  the collapsed state. The `sheetState` is one of the following:
+  - `"collapsed"` - The bottom sheet is collapsed (i.e., snapped to the bottom).
+  - `"partially-expanded"` - The bottom sheet is snapped to one of the intermediate
+    snap points defined by the user.
+  - `"expanded"` - The bottom sheet is fully expanded (i.e., snapped to the full
+    height).
 
 ### `<bottom-sheet-dialog-manager>`: A utility element for the native `<dialog>` element to use the `<bottom-sheet>` element as a dialog
 

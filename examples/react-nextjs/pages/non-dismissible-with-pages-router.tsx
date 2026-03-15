@@ -27,9 +27,9 @@ export default function Page() {
           console.log("Snap position changed:", e.detail)
         }
       >
-        <div slot="snap" style={{ "--snap": "25%" }} />
-        <div slot="snap" style={{ "--snap": "50%" }} className="initial" />
         <div slot="snap" style={{ "--snap": "75%" }} />
+        <div slot="snap" style={{ "--snap": "50%" }} className="initial" />
+        <div slot="snap" style={{ "--snap": "25%" }} />
         <div slot="header">
           <h2>Custom header</h2>
         </div>
