@@ -1,8 +1,9 @@
+import type { SnapPositionChangeEventDetail } from "pure-web-bottom-sheet";
 import DialogPage from "../pageobjects/dialog.page";
 
 declare global {
   interface Window {
-    __capturedSnapPositions?: (string | undefined)[];
+    __capturedSnapEvents?: SnapPositionChangeEventDetail[];
   }
 }
 
@@ -18,35 +19,38 @@ describe("Bottom sheet snap-position-change event", function () {
 
   const addSnapPositionChangeListener = async () => {
     await browser.execute(() => {
-      window.__capturedSnapPositions = [];
+      window.__capturedSnapEvents = [];
       document.addEventListener(
         "snap-position-change",
-        (event: CustomEventInit<{ snapPosition: string }> & Event) => {
-          window.__capturedSnapPositions?.push(event.detail?.snapPosition);
+        (event: CustomEventInit<SnapPositionChangeEventDetail> & Event) => {
+          if (event.detail) {
+            window.__capturedSnapEvents?.push(event.detail);
+          }
         },
       );
     });
   };
 
-  const getCapturedSnapPositions = async (): Promise<
-    (string | undefined)[]
-  > => {
-    return browser.execute(() => window.__capturedSnapPositions ?? []);
-  };
+  const getCapturedSnapEvents =
+    async (): Promise<SnapPositionChangeEventDetail[]> => {
+      return browser.execute(() => window.__capturedSnapEvents ?? []);
+    };
 
-  const clearCapturedSnapPositions = async () => {
+  const clearCapturedSnapEvents = async () => {
     await browser.execute(() => {
-      window.__capturedSnapPositions = [];
+      window.__capturedSnapEvents = [];
     });
   };
 
-  const waitForSnapPosition = async (position: string) => {
+  const waitForSheetState = async (sheetState: string) => {
     await browser.waitUntil(
       async () => {
-        const positions = await getCapturedSnapPositions();
-        return positions.includes(position);
+        const events = await getCapturedSnapEvents();
+        return events.some((e) => e.sheetState === sheetState);
       },
-      { timeoutMsg: `Expected snap position "${position}" to be captured` },
+      {
+        timeoutMsg: `Expected sheetState "${sheetState}" to be captured`,
+      },
     );
   };
 
@@ -55,66 +59,72 @@ describe("Bottom sheet snap-position-change event", function () {
     await addSnapPositionChangeListener();
   });
 
-  it("should fire with snapPosition '1' when sheet snaps to intermediate point", async function () {
+  it("should fire with 'partially-expanded' state when sheet snaps to intermediate point", async function () {
     if (browser.isWebKit) {
       // TODO: WebKit-based browsers may fire multiple "snap-position-change" events
       // on dialog open (related to fallback that uses IntersectionObserver)
       this.skip();
     }
 
-    // The dialog opens at the 50% snap point (intermediate, position 1).
+    // The dialog opens at the 50% snap point (intermediate, snapIndex 1).
     await openDialog();
 
-    await waitForSnapPosition("1");
-    const capturedPositions = await getCapturedSnapPositions();
-    expect(capturedPositions).toEqual(["1"]);
+    await waitForSheetState("partially-expanded");
+    const events = await getCapturedSnapEvents();
+    expect(events).toEqual([
+      { sheetState: "partially-expanded", snapIndex: 1 },
+    ]);
   });
 
-  it("should fire with snapPosition '0' when sheet snaps to top", async function () {
+  it("should fire with 'expanded' state when sheet snaps to top", async function () {
     await openDialog();
-    await waitForSnapPosition("1");
-    await clearCapturedSnapPositions();
+    await waitForSheetState("partially-expanded");
+    await clearCapturedSnapEvents();
 
     // Scroll to top (fully expanded)
     await sheet.setScrollTopRelativeToHeight(snapPoints.P100);
 
-    await waitForSnapPosition("0");
-    const capturedPositions = await getCapturedSnapPositions();
-    expect(capturedPositions).toEqual(["0"]);
+    await waitForSheetState("expanded");
+    const events = await getCapturedSnapEvents();
+    expect(events).toEqual([{ sheetState: "expanded", snapIndex: 2 }]);
   });
 
-  it("should fire with snapPosition '2' when sheet snaps to bottom (collapsed)", async function () {
+  it("should fire with 'collapsed' state when sheet snaps to bottom", async function () {
     await openDialog();
-    await waitForSnapPosition("1");
-    await clearCapturedSnapPositions();
+    await waitForSheetState("partially-expanded");
+    await clearCapturedSnapEvents();
 
     // Scroll to bottom (collapsed)
     await sheet.setScrollTopRelativeToHeight(snapPoints.P0);
 
-    await waitForSnapPosition("2");
-    const capturedPositions = await getCapturedSnapPositions();
-    expect(capturedPositions).toEqual(["2"]);
+    await waitForSheetState("collapsed");
+    const events = await getCapturedSnapEvents();
+    expect(events).toEqual([{ sheetState: "collapsed", snapIndex: 0 }]);
   });
 
   it("should fire events in sequence when moving through all snap positions", async function () {
     await openDialog();
-    await waitForSnapPosition("1");
-    await clearCapturedSnapPositions();
+    await waitForSheetState("partially-expanded");
+    await clearCapturedSnapEvents();
 
-    // Move to top (fully expanded, position 0)
+    // Move to top (fully expanded)
     await sheet.setScrollTopRelativeToHeight(snapPoints.P100);
-    await waitForSnapPosition("0");
+    await waitForSheetState("expanded");
 
-    // Move to intermediate (position 1)
+    // Move to intermediate
     await sheet.setScrollTopRelativeToHeight(snapPoints.P50);
-    await waitForSnapPosition("1");
+    await waitForSheetState("partially-expanded");
 
-    // Move to bottom (collapsed, position 2)
+    // Move to bottom (collapsed)
     await sheet.setScrollTopRelativeToHeight(snapPoints.P0);
-    await waitForSnapPosition("2");
+    await waitForSheetState("collapsed");
 
-    // Verify the sequence of captured positions
-    const capturedPositions = await getCapturedSnapPositions();
-    expect(capturedPositions).toEqual(["0", "1", "2"]);
+    // Verify the sequence of captured events
+    const events = await getCapturedSnapEvents();
+    expect(events).toEqual([
+      { sheetState: "expanded", snapIndex: 2 },
+      { sheetState: "partially-expanded", snapIndex: 1 },
+      { sheetState: "collapsed", snapIndex: 0 },
+    ]);
   });
 });
