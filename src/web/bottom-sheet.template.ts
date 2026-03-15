@@ -151,7 +151,7 @@ const styles = css`
   }
 
   :host {
-    animation: initial-snap 0.01s both;
+    animation: initial-snap var(--initial-snap-duration, 0.5s) backwards;
   }
 
   /* Safari overrides */
@@ -163,11 +163,12 @@ const styles = css`
         (display toggles between none and block).
       */
       display: inherit;
-      /* 
-        On Safari the duration must be higher for the initial-snap animation
-        to properly snap to the initial target.
+      /*
+        On Safari, we need to briefly reset scroll-snap-type after the initial snap
+        before re-enabling scroll-snap-align on other snap points to prevent scroll
+        position from being reset to the initial snap point.
       */
-      animation: initial-snap 0.1s both;
+      --snap-type-initial-reset: none;
     }
   }
 
@@ -178,15 +179,26 @@ const styles = css`
     the initial snap point.
   */
   @keyframes initial-snap {
-    0% {
+    /*
+      Phase 1 (0%-49.99%): Disable scroll snapping for all snap points except 
+      the initial snap point. Keep the host scroll-snap-type at the base value
+      (y mandatory) so the browser can snap to the initial snap point during
+      this window.
+    */
+    0%,
+    49.99% {
+      scroll-snap-type: y mandatory;
       --snap-point-align: none;
     }
-    50% {
-      /* 
-        Needed for the iOS Safari
-        See https://stackoverflow.com/q/65653679
-      */
-      scroll-snap-type: initial;
+    /*
+      Phase 2 (50%-100%): On Safari, set the host scroll-snap-type temporarily
+      to none (via --snap-type-initial-reset) to prevent the scroll position resetting
+      when the scroll-snap-align is re-enabled on all snap points after the animation ends.
+      See https://stackoverflow.com/q/65653679
+    */
+    50%,
+    100% {
+      scroll-snap-type: var(--snap-type-initial-reset, y mandatory);
       --snap-point-align: none;
     }
   }
@@ -200,6 +212,8 @@ const styles = css`
       /* Prevent rubberband effect */
       overscroll-behavior-x: none;
       scrollbar-width: none;
+      /* Prevent horizontal scrolling using touch gestures */
+      touch-action: pan-y pinch-zoom;
 
       &::after {
         display: block;
@@ -233,6 +247,8 @@ const styles = css`
       bottom: 0;
       flex-direction: column;
       justify-content: end;
+      /* Needed for Firefox to properly render sticky items due to using contain: strict */
+      content-visibility: auto;
       /* Fixes scroll-chaining issue on Firefox when sheet content is scrollable */
       contain: strict;
       height: 100%;
@@ -297,13 +313,9 @@ const styles = css`
   }
 
   @supports ((animation-timeline: scroll()) and (animation-range: 0% 100%)) {
-    :host {
-      scroll-timeline: --sheet-timeline y;
-    }
-
     :host([nested-scroll]) .sheet {
       animation: expand-sheet-height linear forwards;
-      animation-timeline: --sheet-timeline;
+      animation-timeline: scroll();
     }
 
     @keyframes expand-sheet-height {
@@ -317,7 +329,7 @@ const styles = css`
 
     :host([nested-scroll][expand-to-scroll]) .sheet-content {
       animation: overflow-y-toggle linear forwards;
-      animation-timeline: --sheet-timeline;
+      animation-timeline: scroll();
     }
 
     @keyframes overflow-y-toggle {
@@ -340,17 +352,17 @@ const styles = css`
         */
         transform: translateY(var(--sheet-timeline-at-scroll-start, 0));
         animation: translate-sheet linear forwards;
-        animation-timeline: --sheet-timeline;
+        animation-timeline: scroll();
       }
 
       .sheet-content {
         animation: translate-sheet-content linear forwards;
-        animation-timeline: --sheet-timeline;
+        animation-timeline: scroll();
       }
 
       .sheet-footer {
         animation: translate-footer linear forwards;
-        animation-timeline: --sheet-timeline;
+        animation-timeline: scroll();
       }
     }
 
