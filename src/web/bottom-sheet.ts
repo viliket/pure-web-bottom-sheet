@@ -121,20 +121,26 @@ export class BottomSheet extends HTMLElement {
             intersectingTargets.delete(entry.target);
           });
 
-        const currentTarget = Array.from(intersectingTargets).at(-1);
+        // Skip when the root has no dimensions (e.g., inside a closed dialog)
+        if (!entries[0]?.rootBounds?.height) {
+          return;
+        }
 
-        // Skip if same as previous or if current target is bottom snap target
-        // (bottom snap target needs to be handled separately)
-        if (
-          currentTarget === bottomSnapTarget ||
-          currentTarget === previousSnapTarget
-        ) {
+        // Skip bottom snap target (handled separately for collapsed state detection)
+        const currentTarget = Array.from(intersectingTargets).findLast(
+          (target) => target !== bottomSnapTarget,
+        );
+
+        if (currentTarget === previousSnapTarget) {
           return;
         }
 
         // Handle case where none of the targets intersect (fully collapsed state)
         if (!currentTarget) {
-          if (!this.hasAttribute("swipe-to-dismiss")) {
+          if (
+            intersectingTargets.has(bottomSnapTarget) ||
+            !this.hasAttribute("swipe-to-dismiss")
+          ) {
             return;
           }
           // Use bottom target when nothing intersects and swipe-to-dismiss is enabled

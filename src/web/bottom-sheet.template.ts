@@ -47,13 +47,24 @@ const styles = css`
   .snap,
   ::slotted([slot="snap"]) {
     position: relative;
-    top: var(--snap);
+    top: calc(var(--snap) - 1px);
+    margin-bottom: -1px; /* Compensate height so it does not affect layout */
+    /*
+      The bottom sheet uses an IntersectionObserver as a fallback for browsers
+      that do not support the native scrollsnapchange event. The snap element
+      needs a bounding box that extends above the observer boundary (the scroll
+      container's top edge) so that these browsers reliably detect it as
+      intersecting when snapped. Without this, e.g., WebKit may report the element
+      as not-intersecting when it sits exactly at the boundary.
+    */
+    height: 1px;
   }
 
   .snap::before,
   ::slotted([slot="snap"])::before {
     position: absolute;
-    top: 0;
+    /* Compensate for the -1px top offset on the parent to keep exact snap position */
+    top: 1px;
     right: 0;
     left: 0;
     height: 1px; /* Height required for Safari to snap */
@@ -69,7 +80,12 @@ const styles = css`
   .snap.snap-bottom {
     position: static;
     top: initial;
+    margin-bottom: 0;
     height: auto;
+
+    &::before {
+      top: 0;
+    }
 
     &::after {
       display: block;
