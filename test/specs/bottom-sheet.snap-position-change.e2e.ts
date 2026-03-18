@@ -175,7 +175,7 @@ describe("Bottom sheet snap-position-change event", function () {
         (el as HTMLDialogElement).close(),
       );
       await EventsPage.dialog.waitForAnimationsToFinish();
-      await expect(EventsPage.dialog).not.toBeDisplayed();
+      await expect(EventsPage.dialog).not.toBeDisplayed({ wait: 0 });
       await clearCapturedSnapEvents();
       await openDialog();
 
@@ -197,7 +197,7 @@ describe("Bottom sheet snap-position-change event", function () {
         (el as HTMLDialogElement).close(),
       );
       await EventsPage.dialog.waitForAnimationsToFinish();
-      await expect(EventsPage.dialog).not.toBeDisplayed();
+      await expect(EventsPage.dialog).not.toBeDisplayed({ wait: 0 });
       await clearCapturedSnapEvents();
       await openDialog();
 
@@ -292,10 +292,10 @@ describe("Bottom sheet snap-position-change event", function () {
       // are active before proceeding.
       await sheet.waitForSnapPointsToActivate();
 
-      // The non-dismissible sheet is already visible on page load, so the
-      // initial snap event fires before the listener is registered.
-      const initialEvents = await getCapturedSnapEvents();
-      expect(initialEvents).toEqual([]);
+      // The initial snap event may or may not be captured depending on how
+      // quickly the browser delivers the first IntersectionObserver callback
+      // relative to when the test's event listener is registered.
+      await clearCapturedSnapEvents();
 
       // Scroll to full height to establish a known position
       await sheet.setScrollTopRelativeToHeight(snapPoints.P100);
