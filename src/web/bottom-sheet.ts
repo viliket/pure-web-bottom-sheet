@@ -41,7 +41,8 @@ export class BottomSheet extends HTMLElement {
   #shadow: ShadowRoot;
   #cleanupIntersectionObserver: (() => void) | null = null;
   #cleanupNestedScrollResizeOptimization: (() => void) | null = null;
-  #currentSnapIndex: number | null = null;
+  #currentSnapState: { snapIndex: number; sheetState: SheetState } | null =
+    null;
 
   constructor() {
     super();
@@ -97,7 +98,7 @@ export class BottomSheet extends HTMLElement {
     const intersectingTargets = new Set<Element>();
     let previousSnapTarget: Element | null = null;
 
-    const getDistanceToObserverBottom = (entry: IntersectionObserverEntry) =>
+    const getDistanceToSnapLine = (entry: IntersectionObserverEntry) =>
       Math.abs(entry.intersectionRect.top - (entry.rootBounds?.bottom ?? 0));
 
     const observer = new IntersectionObserver(
@@ -107,9 +108,7 @@ export class BottomSheet extends HTMLElement {
         entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => {
-            return (
-              getDistanceToObserverBottom(b) - getDistanceToObserverBottom(a)
-            );
+            return getDistanceToSnapLine(b) - getDistanceToSnapLine(a);
           })
           .forEach((entry) => {
             intersectingTargets.add(entry.target);
@@ -202,17 +201,19 @@ export class BottomSheet extends HTMLElement {
 
     const { snapIndex, sheetState } = snapState;
 
-    // Prevent duplicate events when top snap point and .sheet element resolve to same index
-    if (this.#currentSnapIndex === snapIndex) {
+    if (
+      this.#currentSnapState?.snapIndex === snapIndex &&
+      this.#currentSnapState?.sheetState === sheetState
+    ) {
       return;
     }
 
-    this.#currentSnapIndex = snapIndex;
+    this.#currentSnapState = snapState;
     this.dataset.sheetState = sheetState;
 
     this.dispatchEvent(
       new CustomEvent<SnapPositionChangeEventDetail>("snap-position-change", {
-        detail: { sheetState, snapIndex },
+        detail: snapState,
         bubbles: true,
         composed: true,
       }),

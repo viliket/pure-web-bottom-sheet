@@ -31,7 +31,7 @@ export class BottomSheetDialogManager extends HTMLElement {
           this.dataset.sheetState = event.detail.sheetState;
         }
         if (
-          event.detail?.sheetState == "collapsed" &&
+          event.detail?.sheetState === "collapsed" &&
           event.target instanceof HTMLElement &&
           event.target.hasAttribute("swipe-to-dismiss") &&
           event.target.checkVisibility()
