@@ -1,0 +1,116 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DummyContent from "../components/DummyContent.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+import SheetConfigPanel from "../components/SheetConfigPanel.astro";
+---
+
+<Layout>
+  <section>
+    <h1>Modal bottom sheet with snap position change event listener</h1>
+    <p>
+      This example demonstrates listening to the custom <code
+        >snap-position-change</code
+      > event emitted by the bottom sheet when its snap position changes.
+    </p>
+    <p><button id="open-modal">Open sheet</button></p>
+    <pre id="log"></pre>
+  </section>
+  <SheetConfigPanel bottomSheetSelector="bottom-sheet.example" />
+  <DummyContent />
+
+  <bottom-sheet-dialog-manager>
+    <dialog id="bottom-sheet-dialog">
+      <bottom-sheet class="example" nested-scroll swipe-to-dismiss tabindex="0">
+        <template shadowrootmode="open">
+          <Fragment set:html={bottomSheetTemplate} />
+        </template>
+
+        {/* Snap points */}
+        <div slot="snap" style="--snap: 100%" class="top"></div>
+        <div slot="snap" style="--snap: 75%"></div>
+        <div slot="snap" style="--snap: 50%" class="initial"></div>
+        <div slot="snap" style="--snap: 25%"></div>
+
+        <div slot="header">
+          <h2><span id="current-state"></span></h2>
+        </div>
+        <div slot="footer">
+          <h2>Custom footer</h2>
+        </div>
+
+        <p>
+          The current state of the bottom sheet is displayed in the sheet
+          header.
+        </p>
+        <p>
+          This bottom sheet has the following snap points:
+          <ul>
+            <li>maximum height, based on <code>--sheet-max-height</code></li>
+            <li>75% of the maximum height</li>
+            <li>50% of the maximum height (set as the initial snap point)</li>
+            <li>25% of the maximum height</li>
+          </ul>
+        </p>
+
+        <details open>
+          <summary>Dummy content</summary>
+          <DummyContent />
+        </details>
+      </bottom-sheet>
+    </dialog>
+  </bottom-sheet-dialog-manager>
+</Layout>
+
+<style>
+  bottom-sheet h2 {
+    margin: 0.5em 0;
+    text-align: center;
+  }
+
+  #log {
+    height: 150px;
+    overflow: scroll;
+    padding: 0.5rem;
+    border: 1px solid black;
+    font-size: 0.8rem;
+  }
+</style>
+
+<script>
+  import {
+    registerSheetElements,
+    type SnapPositionChangeEventDetail,
+  } from "pure-web-bottom-sheet";
+  registerSheetElements();
+
+  const openModalButton = document.getElementById("open-modal");
+  const dialog = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog",
+  );
+  openModalButton?.addEventListener("click", () => {
+    dialog?.showModal();
+  });
+  const logElement = document.getElementById("log")!;
+  const log = (message: string) => {
+    console.log(message);
+    logElement.textContent += message + "\n";
+    logElement.scrollTop = logElement.scrollHeight;
+  };
+  dialog?.addEventListener("toggle", (e) => {
+    log(`Dialog toggled: ${e.newState}`);
+  });
+  const sheet = document.querySelector("bottom-sheet.example");
+  const currentStateIndicator = document.getElementById("current-state");
+  if (sheet && currentStateIndicator) {
+    sheet.addEventListener(
+      "snap-position-change",
+      (e: CustomEventInit<SnapPositionChangeEventDetail> & Event) => {
+        log(
+          `Snap position changed:\n\t- Snap index: ${e.detail?.snapIndex}, state: ${e.detail?.sheetState}`,
+        );
+        currentStateIndicator.textContent = `Snap index: ${e.detail?.snapIndex}, state: ${e.detail?.sheetState}`;
+      },
+    );
+  }
+</script>

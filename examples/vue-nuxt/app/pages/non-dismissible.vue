@@ -15,9 +15,9 @@
       <div slot="footer">
         <h2>Custom footer</h2>
       </div>
-      <div slot="snap" style="--snap: 25%"></div>
-      <div slot="snap" style="--snap: 50%" class="initial"></div>
       <div slot="snap" style="--snap: 75%"></div>
+      <div slot="snap" style="--snap: 50%" class="initial"></div>
+      <div slot="snap" style="--snap: 25%"></div>
       <DummyContent />
     </VBottomSheet>
   </section>

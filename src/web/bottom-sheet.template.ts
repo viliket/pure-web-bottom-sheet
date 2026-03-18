@@ -47,13 +47,24 @@ const styles = css`
   .snap,
   ::slotted([slot="snap"]) {
     position: relative;
-    top: var(--snap);
+    top: calc(var(--snap) - 1px);
+    margin-bottom: -1px; /* Compensate height so it does not affect layout */
+    /*
+      The bottom sheet uses an IntersectionObserver as a fallback for browsers
+      that do not support the native scrollsnapchange event. The snap element
+      needs a bounding box that extends above the observer boundary (the scroll
+      container's top edge) so that these browsers reliably detect it as
+      intersecting when snapped. Without this, e.g., WebKit may report the element
+      as not-intersecting when it sits exactly at the boundary.
+    */
+    height: 1px;
   }
 
   .snap::before,
   ::slotted([slot="snap"])::before {
     position: absolute;
-    top: 0;
+    /* Compensate for the -1px top offset on the parent to keep exact snap position */
+    top: 1px;
     right: 0;
     left: 0;
     height: 1px; /* Height required for Safari to snap */
@@ -69,7 +80,12 @@ const styles = css`
   .snap.snap-bottom {
     position: static;
     top: initial;
+    margin-bottom: 0;
     height: auto;
+
+    &::before {
+      top: 0;
+    }
 
     &::after {
       display: block;
@@ -87,10 +103,10 @@ const styles = css`
   .sentinel {
     position: relative;
 
-    &[data-snap="0"] {
+    &[data-snap="top"] {
       top: -1px; /** Extra -1px needed for Safari */
     }
-    &[data-snap="1"] {
+    &[data-snap="bottom"] {
       top: 1px;
     }
   }
@@ -406,7 +422,7 @@ const styles = css`
       overflow-y: hidden;
     }
 
-    :host([nested-scroll][expand-to-scroll][data-sheet-snap-position="0"])
+    :host([nested-scroll][expand-to-scroll][data-sheet-state="expanded"])
       .sheet-content {
       overflow-y: auto;
     }
@@ -437,11 +453,11 @@ export const template: string = /* HTML */ `
   <slot name="snap">
     <div class="snap initial" style="--snap: 100%"></div>
   </slot>
-  <div class="sentinel" data-snap="1"></div>
-  <div class="snap snap-bottom" data-snap="2"></div>
-  <div class="sentinel" data-snap="0"></div>
+  <div class="sentinel" data-snap="bottom"></div>
+  <div class="snap snap-bottom" data-snap="bottom"></div>
+  <div class="sentinel" data-snap="top"></div>
   <div class="sheet-wrapper">
-    <aside class="sheet" part="sheet" data-snap="0">
+    <aside class="sheet" part="sheet" data-snap="top">
       <header class="sheet-header" part="header">
         <div class="handle" part="handle"></div>
         <slot name="header"></slot>
