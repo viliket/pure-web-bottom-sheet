@@ -4,6 +4,7 @@ import type {
 } from "pure-web-bottom-sheet";
 import DialogPage from "../pageobjects/dialog.page";
 import EventsPage from "../pageobjects/events.page";
+import NonDismissiblePage from "../pageobjects/non-dismissible.page";
 
 declare global {
   interface Window {
@@ -42,13 +43,21 @@ describe("Bottom sheet snap-position-change event", function () {
     snapIndex: number,
     sheetState: SheetState,
   ) => {
+    let lastEvent: SnapPositionChangeEventDetail | undefined;
     await browser.waitUntil(
       async () => {
-        const last = (await getCapturedSnapEvents()).at(-1);
-        return last?.snapIndex === snapIndex && last?.sheetState === sheetState;
+        lastEvent = (await getCapturedSnapEvents()).at(-1);
+        return (
+          lastEvent?.snapIndex === snapIndex &&
+          lastEvent?.sheetState === sheetState
+        );
       },
       {
-        timeoutMsg: `Expected last snap event to be {snapIndex: ${snapIndex}, sheetState: "${sheetState}"}`,
+        timeoutMsg:
+          `Expected last snap event to be ` +
+          `{snapIndex: ${snapIndex}, ` +
+          `sheetState: "${sheetState}"}, ` +
+          `but was ${JSON.stringify(lastEvent)}`,
       },
     );
   };
@@ -125,6 +134,82 @@ describe("Bottom sheet snap-position-change event", function () {
       ]);
     });
 
+    it("should recalculate snap indices after snap points are dynamically changed", async function () {
+      await openDialog();
+      await waitForSnapEvent(2, "partially-expanded");
+
+      // Remove the 25% and 75% snap points, leaving only 100% (.top) and 50%
+      await browser.execute(() => {
+        const sheet = document.querySelector("bottom-sheet.example");
+        sheet?.querySelectorAll('[slot="snap"]').forEach((el) => {
+          const snap = (el as HTMLElement).style.getPropertyValue("--snap");
+          if (snap === "25%" || snap === "75%") {
+            el.remove();
+          }
+        });
+      });
+      await clearCapturedSnapEvents();
+
+      // Scroll to top. With only 2 snap points remaining, the top snap point
+      // (100%) should now be snapIndex 2 instead of 4.
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P100);
+      await waitForSnapEvent(2, "expanded");
+
+      // Scroll back to 50%. This should now be snapIndex 1 instead of 2.
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P50);
+      await waitForSnapEvent(1, "partially-expanded");
+
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([
+        { sheetState: "expanded", snapIndex: 2 },
+        { sheetState: "partially-expanded", snapIndex: 1 },
+      ]);
+    });
+
+    it("should not fire duplicate event when dialog is reopened at the same snap position", async function () {
+      await openDialog();
+      await waitForSnapEvent(2, "partially-expanded");
+
+      // Close and reopen without changing snap position
+      await EventsPage.dialog.execute((el) =>
+        (el as HTMLDialogElement).close(),
+      );
+      await EventsPage.dialog.waitForAnimationsToFinish();
+      await expect(EventsPage.dialog).not.toBeDisplayed();
+      await clearCapturedSnapEvents();
+      await openDialog();
+
+      // No event should fire because the snap index is still 2
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([]);
+    });
+
+    it("should fire initial snap event when dialog is reopened after a position change", async function () {
+      await openDialog();
+      await waitForSnapEvent(2, "partially-expanded");
+
+      // Scroll to expanded before closing
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P100);
+      await waitForSnapEvent(4, "expanded");
+
+      // Close and reopen the dialog
+      await EventsPage.dialog.execute((el) =>
+        (el as HTMLDialogElement).close(),
+      );
+      await EventsPage.dialog.waitForAnimationsToFinish();
+      await expect(EventsPage.dialog).not.toBeDisplayed();
+      await clearCapturedSnapEvents();
+      await openDialog();
+
+      // The sheet snaps back to the initial 50% position and fires
+      // because the snap index changed from 4 to 2.
+      await waitForSnapEvent(2, "partially-expanded");
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([
+        { sheetState: "partially-expanded", snapIndex: 2 },
+      ]);
+    });
+
     it("should fire events in sequence when moving through all snap positions", async function () {
       await openDialog();
       await waitForSnapEvent(2, "partially-expanded");
@@ -190,6 +275,43 @@ describe("Bottom sheet snap-position-change event", function () {
       await waitForSnapEvent(2, "expanded");
       const events = await getCapturedSnapEvents();
       expect(events).toEqual([{ sheetState: "expanded", snapIndex: 2 }]);
+    });
+  });
+
+  describe("sheet without swipe-to-dismiss", function () {
+    const sheet = NonDismissiblePage.bottomSheet;
+    const snapPoints = sheet.snapPoints;
+
+    beforeEach(async function () {
+      await NonDismissiblePage.open();
+      await addSnapPositionChangeListener();
+    });
+
+    it("should not fire 'collapsed' event when scrolling to the bottom", async function () {
+      // Wait for the initial snap animation to finish so all snap points
+      // are active before proceeding.
+      await sheet.waitForSnapPointsToActivate();
+
+      // The non-dismissible sheet is already visible on page load, so the
+      // initial snap event fires before the listener is registered.
+      const initialEvents = await getCapturedSnapEvents();
+      expect(initialEvents).toEqual([]);
+
+      // Scroll to full height to establish a known position
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P100);
+      await waitForSnapEvent(4, "expanded");
+      await clearCapturedSnapEvents();
+
+      // Scroll to the lowest position. Without swipe-to-dismiss, the bottom
+      // snap point is disabled, so the sheet snaps to the lowest user-defined
+      // snap point (25%) instead of collapsing.
+      await sheet.setScrollTopRelativeToHeight(0);
+
+      await waitForSnapEvent(1, "partially-expanded");
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([
+        { sheetState: "partially-expanded", snapIndex: 1 },
+      ]);
     });
   });
 });
