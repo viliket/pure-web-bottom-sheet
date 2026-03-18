@@ -464,9 +464,11 @@ using the bottom sheet as an overlay that should always remain visible.
   - Optionally specify the class `initial` to make the bottom sheet
     initially snap to that point each time it is opened. Note that
     only a single snap point should specify this class.
-  - Optionally specify the class `top` if the snap point represents a fully expanded
-    "top" snap point (i.e., `--snap: 100%`) so that the snap index calculation
-    treats this snap point index equal to the fully expanded sheet position.
+  - Optionally specify the class `top` if the snap point represents the fully
+    expanded sheet position (i.e., `--snap: 100%`). This ensures the
+    `snap-position-change` event reports `sheetState: "expanded"` for this snap
+    point, and that its `snapIndex` matches the fully expanded sheet position.
+    Must be the first snap point in the DOM.
 
 - **`header`** (optional)  
   Optional header content that is displayed at the top of the bottom sheet.
