@@ -109,6 +109,13 @@ const styles = css`
     &[data-snap="bottom"] {
       top: 1px;
     }
+    &[data-snap="content-height"] {
+      position: absolute;
+      top: calc(
+        (var(--sheet-max-height) - min(100%, var(--sheet-max-height))) * -1 -
+          1px
+      );
+    }
   }
 
   .sheet-wrapper {
@@ -253,6 +260,16 @@ const styles = css`
 
     .sheet {
       min-height: 100%;
+    }
+  }
+
+  :host([content-height]) {
+    .sheet-wrapper {
+      /*
+        Needed to position the "content-height" sentinel at the correct position
+        relative to the sheet for accurate intersection observation.
+      */
+      position: relative;
     }
   }
 
@@ -457,6 +474,7 @@ export const template: string = /* HTML */ `
   <div class="snap snap-bottom" data-snap="bottom"></div>
   <div class="sentinel" data-snap="top"></div>
   <div class="sheet-wrapper">
+    <div class="sentinel" data-snap="content-height"></div>
     <aside class="sheet" part="sheet" data-snap="top">
       <header class="sheet-header" part="header">
         <div class="handle" part="handle"></div>

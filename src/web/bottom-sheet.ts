@@ -31,7 +31,7 @@ declare var ScrollTimeline: {
  * }
  */
 export class BottomSheet extends HTMLElement {
-  static observedAttributes = ["nested-scroll-optimization"];
+  static observedAttributes = ["nested-scroll-optimization", "content-height"];
   #handleViewportResize = () => {
     this.style.setProperty(
       "--sw-keyboard-height",
@@ -40,9 +40,13 @@ export class BottomSheet extends HTMLElement {
   };
   #shadow: ShadowRoot;
   #cleanupIntersectionObserver: (() => void) | null = null;
+  #cleanupSheetSizeObserver: (() => void) | null = null;
   #cleanupNestedScrollResizeOptimization: (() => void) | null = null;
-  #currentSnapState: { snapIndex: number; sheetState: SheetState } | null =
-    null;
+  #currentSnapState: {
+    snapIndex: number;
+    sheetState: SheetState;
+    snapTarget: Element;
+  } | null = null;
 
   constructor() {
     super();
@@ -92,8 +96,11 @@ export class BottomSheet extends HTMLElement {
     const bottomSnapTarget = this.#shadow.querySelector(
       '.sentinel[data-snap="bottom"]',
     );
+    const contentHeightTarget = this.#shadow.querySelector(
+      '.sentinel[data-snap="content-height"]',
+    );
 
-    if (!snapSlot || !bottomSnapTarget) return;
+    if (!snapSlot || !bottomSnapTarget || !contentHeightTarget) return;
 
     const intersectingTargets = new Set<Element>();
     let previousSnapTarget: Element | null = null;
@@ -126,8 +133,12 @@ export class BottomSheet extends HTMLElement {
         }
 
         // Skip bottom snap target (handled separately for collapsed state detection)
+        // and content height target if content-height attribute is unset
+        const skipContentHeightTarget = !this.hasAttribute("content-height");
         const currentTarget = Array.from(intersectingTargets).findLast(
-          (target) => target !== bottomSnapTarget,
+          (target) =>
+            target !== bottomSnapTarget &&
+            (!skipContentHeightTarget || target !== contentHeightTarget),
         );
 
         if (currentTarget === previousSnapTarget) {
@@ -208,7 +219,7 @@ export class BottomSheet extends HTMLElement {
       return;
     }
 
-    this.#currentSnapState = snapState;
+    this.#currentSnapState = { ...snapState, snapTarget: newSnapTarget };
     this.dataset.sheetState = sheetState;
 
     this.dispatchEvent(
@@ -238,6 +249,41 @@ export class BottomSheet extends HTMLElement {
       snapTarget.dataset.snap === "bottom"
     ) {
       return { snapIndex: 0, sheetState: "collapsed" };
+    }
+
+    // When content-height attribute is set, we must check if the sheet has reached
+    // maximum scroll top (i.e. the content height) and consider that as snapped
+    // to the expanded state and choose the snap index based on the closest snap
+    // point above the content height.
+    if (this.hasAttribute("content-height")) {
+      const maxScroll = this.scrollHeight - this.offsetHeight;
+      const hasReachedContentHeight = this.scrollTop >= maxScroll;
+      if (hasReachedContentHeight && assignedSnapPoints.length > 0) {
+        let closestUnreachedSnapIndex = -1;
+        let closestDistance = Infinity;
+
+        for (let i = 0; i < assignedSnapPoints.length; i++) {
+          const snapPosition = (assignedSnapPoints[i] as HTMLElement).offsetTop;
+          const distance = snapPosition - this.scrollTop;
+          if (distance >= 0 && distance < closestDistance) {
+            closestDistance = distance;
+            closestUnreachedSnapIndex = i;
+          }
+        }
+
+        if (closestUnreachedSnapIndex !== -1) {
+          const snapIndex =
+            assignedSnapPoints.length - closestUnreachedSnapIndex;
+          return { snapIndex, sheetState: "expanded" };
+        }
+      } else if (
+        snapTarget instanceof HTMLElement &&
+        snapTarget.dataset.snap === "content-height"
+      ) {
+        // The "content-height" sentinel cannot be used for snap state calculation
+        // when the content height has not been reached.
+        return null;
+      }
     }
 
     // Snapped on one of the snap points assigned to the "snap" slot
@@ -418,6 +464,27 @@ export class BottomSheet extends HTMLElement {
     };
   }
 
+  #setupSheetSizeObserver() {
+    // We need to observe size changes of the sheet to re-dispatch snap-position-change
+    // event in case the content height changes and causes a different snap point
+    // to be the closest one to the sheet top.
+    const resizeObserver = new ResizeObserver(() => {
+      if (this.#currentSnapState) {
+        this.#updateSnapPosition(this.#currentSnapState.snapTarget);
+      }
+    });
+
+    const sheet = this.#shadow.querySelector<HTMLElement>(".sheet");
+    if (sheet) {
+      resizeObserver.observe(sheet);
+    }
+
+    this.#cleanupSheetSizeObserver = () => {
+      resizeObserver.disconnect();
+      this.#cleanupSheetSizeObserver = null;
+    };
+  }
+
   attributeChangedCallback(
     name: string,
     oldValue: string | null,
@@ -434,6 +501,16 @@ export class BottomSheet extends HTMLElement {
           }
         } else if (this.#cleanupNestedScrollResizeOptimization) {
           this.#cleanupNestedScrollResizeOptimization();
+        }
+        break;
+      case "content-height":
+        if (newValue !== null) {
+          if (!this.#cleanupSheetSizeObserver) {
+            // Only setup if not already setup
+            this.#setupSheetSizeObserver();
+          }
+        } else if (this.#cleanupSheetSizeObserver) {
+          this.#cleanupSheetSizeObserver();
         }
         break;
       default:
