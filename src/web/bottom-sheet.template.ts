@@ -115,6 +115,10 @@ const styles = css`
         (var(--sheet-max-height) - min(100%, var(--sheet-max-height))) * -1 -
           1px
       );
+
+      :host(:not([content-height])) & {
+        display: none;
+      }
     }
   }
 
