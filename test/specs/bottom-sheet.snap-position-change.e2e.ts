@@ -403,6 +403,25 @@ describe("Bottom sheet snap-position-change event", function () {
       const events = await getCapturedSnapEvents();
       expect(events).toEqual([{ sheetState: "collapsed", snapIndex: 0 }]);
     });
+
+    it("should update sheetState when content grows past the current snap point", async function () {
+      await waitForSnapEvent(1, "expanded");
+      await DynamicHeightPage.addBlocks(4);
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P25);
+      await waitForSnapEvent(1, "partially-expanded");
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P50);
+      await waitForSnapEvent(2, "expanded");
+      await clearCapturedSnapEvents();
+
+      await DynamicHeightPage.addBlocks(1);
+
+      await waitForSnapEvent(2, "partially-expanded");
+
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([
+        { sheetState: "partially-expanded", snapIndex: 2 },
+      ]);
+    });
   });
 
   describe("sheet without swipe-to-dismiss", function () {

@@ -24,7 +24,7 @@ declare var ScrollTimeline: {
  * }
  */
 export class BottomSheet extends HTMLElement {
-  static observedAttributes = ["nested-scroll-optimization"];
+  static observedAttributes = ["nested-scroll-optimization", "content-height"];
   #handleViewportResize = () => {
     this.style.setProperty(
       "--sw-keyboard-height",
@@ -33,9 +33,13 @@ export class BottomSheet extends HTMLElement {
   };
   #shadow: ShadowRoot;
   #cleanupIntersectionObserver: (() => void) | null = null;
+  #cleanupSheetSizeObserver: (() => void) | null = null;
   #cleanupNestedScrollResizeOptimization: (() => void) | null = null;
-  #currentSnapState: { snapIndex: number; sheetState: SheetState } | null =
-    null;
+  #currentSnapState: {
+    snapIndex: number;
+    sheetState: SheetState;
+    snapTarget: Element;
+  } | null = null;
 
   constructor() {
     super();
@@ -190,7 +194,7 @@ export class BottomSheet extends HTMLElement {
       return;
     }
 
-    this.#currentSnapState = snapState;
+    this.#currentSnapState = { ...snapState, snapTarget: newSnapTarget };
     this.dataset.sheetState = sheetState;
 
     this.dispatchEvent(
@@ -458,6 +462,31 @@ export class BottomSheet extends HTMLElement {
     };
   }
 
+  #setupSheetSizeObserver() {
+    // Observe sheet size changes to re-dispatch the snap-position-change event
+    // in case the height change results in a different snap point being the closest
+    // one to the sheet top.
+    let previousBlockSize = 0;
+    const resizeObserver = new ResizeObserver((e) => {
+      const blockSize = e.at(0)?.contentBoxSize.at(0)?.blockSize ?? 0;
+      if (!blockSize || blockSize === previousBlockSize) return;
+      previousBlockSize = blockSize;
+      if (this.#currentSnapState) {
+        this.#updateSnapPosition(this.#currentSnapState.snapTarget);
+      }
+    });
+
+    const sheet = this.#shadow.querySelector<HTMLElement>(".sheet");
+    if (sheet) {
+      resizeObserver.observe(sheet);
+    }
+
+    this.#cleanupSheetSizeObserver = () => {
+      resizeObserver.disconnect();
+      this.#cleanupSheetSizeObserver = null;
+    };
+  }
+
   attributeChangedCallback(
     name: string,
     oldValue: string | null,
@@ -474,6 +503,16 @@ export class BottomSheet extends HTMLElement {
           }
         } else if (this.#cleanupNestedScrollResizeOptimization) {
           this.#cleanupNestedScrollResizeOptimization();
+        }
+        break;
+      case "content-height":
+        if (newValue !== null) {
+          if (!this.#cleanupSheetSizeObserver) {
+            // Only setup if not already setup
+            this.#setupSheetSizeObserver();
+          }
+        } else if (this.#cleanupSheetSizeObserver) {
+          this.#cleanupSheetSizeObserver();
         }
         break;
       default:
