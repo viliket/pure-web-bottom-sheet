@@ -34,11 +34,8 @@ export class BottomSheet extends HTMLElement {
   #shadow: ShadowRoot;
   #cleanupIntersectionObserver: (() => void) | null = null;
   #cleanupNestedScrollResizeOptimization: (() => void) | null = null;
-  #currentSnapState: {
-    snapIndex: number;
-    sheetState: SheetState;
-    snapTarget: Element;
-  } | null = null;
+  #currentSnapState: { snapIndex: number; sheetState: SheetState } | null =
+    null;
 
   constructor() {
     super();
@@ -77,7 +74,6 @@ export class BottomSheet extends HTMLElement {
   #setupIntersectionObserver() {
     const snapSlot =
       this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]');
-
     const bottomSnapTarget = this.#shadow.querySelector(
       '.sentinel[data-snap="bottom"]',
     );
@@ -194,7 +190,7 @@ export class BottomSheet extends HTMLElement {
       return;
     }
 
-    this.#currentSnapState = { ...snapState, snapTarget: newSnapTarget };
+    this.#currentSnapState = snapState;
     this.dataset.sheetState = sheetState;
 
     this.dispatchEvent(
