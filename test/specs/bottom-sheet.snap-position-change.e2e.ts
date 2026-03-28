@@ -3,6 +3,7 @@ import type {
   SheetState,
 } from "pure-web-bottom-sheet";
 import DialogPage from "../pageobjects/dialog.page";
+import DynamicHeightPage from "../pageobjects/dynamic-height.page";
 import EventsPage from "../pageobjects/events.page";
 import NonDismissiblePage from "../pageobjects/non-dismissible.page";
 
@@ -43,23 +44,21 @@ describe("Bottom sheet snap-position-change event", function () {
     snapIndex: number,
     sheetState: SheetState,
   ) => {
-    let lastEvent: SnapPositionChangeEventDetail | undefined;
-    await browser.waitUntil(
-      async () => {
-        lastEvent = (await getCapturedSnapEvents()).at(-1);
-        return (
-          lastEvent?.snapIndex === snapIndex &&
-          lastEvent?.sheetState === sheetState
-        );
-      },
-      {
-        timeoutMsg:
-          `Expected last snap event to be ` +
+    await browser.waitUntil(async () => {
+      const lastEvent = (await getCapturedSnapEvents()).at(-1);
+      if (
+        lastEvent?.snapIndex === snapIndex &&
+        lastEvent?.sheetState === sheetState
+      ) {
+        return true;
+      }
+      throw new Error(
+        `Expected last snap event to be ` +
           `{snapIndex: ${snapIndex}, ` +
           `sheetState: "${sheetState}"}, ` +
           `but was ${JSON.stringify(lastEvent)}`,
-      },
-    );
+      );
+    });
   };
 
   describe("sheet with explicit top snap point", function () {
@@ -275,6 +274,134 @@ describe("Bottom sheet snap-position-change event", function () {
       await waitForSnapEvent(2, "expanded");
       const events = await getCapturedSnapEvents();
       expect(events).toEqual([{ sheetState: "expanded", snapIndex: 2 }]);
+    });
+  });
+
+  describe("sheet with content-height and dynamic content blocks", function () {
+    // On the dynamic height page, user can add or remove content blocks to the
+    // sheet contents. Each block is 10vh, and the header and footer themselves
+    // are 10vh in total). So N blocks corresponds to (N + 1) * 10vh content height.
+    const sheet = DynamicHeightPage.bottomSheet;
+    const snapPoints = sheet.snapPoints;
+
+    beforeEach(async function () {
+      await DynamicHeightPage.open();
+      await addSnapPositionChangeListener();
+      await DynamicHeightPage.openDialog();
+      await expect(DynamicHeightPage.dialog).toBeDisplayed();
+      await expect(sheet.host).toBeDisplayed();
+    });
+
+    it("should fire 'expanded' at snap index 1 with minimal content (0 blocks, 10vh)", async function () {
+      // 0 blocks = 10vh content (max height between P0 and P25)
+      await waitForSnapEvent(1, "expanded");
+
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([{ sheetState: "expanded", snapIndex: 1 }]);
+    });
+
+    it("should fire 'expanded' at snap index 2 when content grows past P25 (2 blocks, 30vh)", async function () {
+      await waitForSnapEvent(1, "expanded");
+      await DynamicHeightPage.addBlocks(2);
+      // Scroll to a known position and clear events to avoid browser-dependent
+      // intermediate snap events fired while blocks are added.
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P25);
+      await waitForSnapEvent(1, "partially-expanded");
+      await clearCapturedSnapEvents();
+
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P50);
+      await waitForSnapEvent(2, "expanded");
+
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([{ sheetState: "expanded", snapIndex: 2 }]);
+    });
+
+    it("should fire 'expanded' at snap index 3 when content grows past P50 (5 blocks, 60vh)", async function () {
+      await waitForSnapEvent(1, "expanded");
+      await DynamicHeightPage.addBlocks(5);
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P25);
+      await waitForSnapEvent(1, "partially-expanded");
+      await clearCapturedSnapEvents();
+
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P75);
+      await waitForSnapEvent(3, "expanded");
+
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P50);
+      await waitForSnapEvent(2, "partially-expanded");
+
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([
+        { sheetState: "expanded", snapIndex: 3 },
+        { sheetState: "partially-expanded", snapIndex: 2 },
+      ]);
+    });
+
+    it("should fire 'expanded' at snap index 4 when content grows past P75 (8 blocks, 90vh)", async function () {
+      await waitForSnapEvent(1, "expanded");
+      await DynamicHeightPage.addBlocks(8);
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P25);
+      await waitForSnapEvent(1, "partially-expanded");
+      await clearCapturedSnapEvents();
+
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P100);
+      await waitForSnapEvent(4, "expanded");
+
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P75);
+      await waitForSnapEvent(3, "partially-expanded");
+
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([
+        { sheetState: "expanded", snapIndex: 4 },
+        { sheetState: "partially-expanded", snapIndex: 3 },
+      ]);
+    });
+
+    it("should fire 'expanded' at snap index 4 when content reaches full height (9 blocks, 100vh)", async function () {
+      await waitForSnapEvent(1, "expanded");
+      await DynamicHeightPage.addBlocks(9);
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P25);
+      await waitForSnapEvent(1, "partially-expanded");
+      await clearCapturedSnapEvents();
+
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P100);
+      await waitForSnapEvent(4, "expanded");
+
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([{ sheetState: "expanded", snapIndex: 4 }]);
+    });
+
+    it("should lower the expanded snap index when content shrinks (8 blocks down to 2)", async function () {
+      await waitForSnapEvent(1, "expanded");
+      await DynamicHeightPage.addBlocks(8);
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P100);
+      await waitForSnapEvent(4, "expanded");
+
+      // Remove 6 blocks (back to 30vh content, between P25 and P50)
+      await DynamicHeightPage.removeBlocks(6);
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P25);
+      await waitForSnapEvent(1, "partially-expanded");
+      await clearCapturedSnapEvents();
+
+      // P50 should now be the expanded position (snap index 2)
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P50);
+      await waitForSnapEvent(2, "expanded");
+
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([{ sheetState: "expanded", snapIndex: 2 }]);
+    });
+
+    it("should fire 'collapsed' when scrolling to P0", async function () {
+      await waitForSnapEvent(1, "expanded");
+      await DynamicHeightPage.addBlocks(4);
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P50);
+      await waitForSnapEvent(2, "expanded");
+      await clearCapturedSnapEvents();
+
+      await sheet.setScrollTopRelativeToHeight(snapPoints.P0);
+      await waitForSnapEvent(0, "collapsed");
+
+      const events = await getCapturedSnapEvents();
+      expect(events).toEqual([{ sheetState: "collapsed", snapIndex: 0 }]);
     });
   });
 

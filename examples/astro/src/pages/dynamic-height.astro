@@ -1,0 +1,166 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DummyContent from "../components/DummyContent.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+import SheetConfigPanel from "../components/SheetConfigPanel.astro";
+---
+
+<Layout>
+  <section>
+    <h1>Modal bottom sheet with dynamic height</h1>
+    <p>
+      This example demonstrates a bottom sheet with <code>content-height</code>
+      and dynamically added/removed content blocks. Each content block is
+      <code>10vh</code> tall, and the header and footer together are <code
+        >10vh</code
+      >tall in total, making the total sheet height <code>(N+1) * 10vh</code>
+      for N content blocks.
+    </p>
+    <p><button id="open-modal">Open sheet</button></p>
+    <pre id="log"></pre>
+  </section>
+  <SheetConfigPanel bottomSheetSelector="bottom-sheet.example" />
+  <DummyContent />
+
+  <bottom-sheet-dialog-manager>
+    <dialog id="bottom-sheet-dialog">
+      <bottom-sheet
+        class="example"
+        content-height
+        swipe-to-dismiss
+        tabindex="0"
+      >
+        <template shadowrootmode="open">
+          <Fragment set:html={bottomSheetTemplate} />
+        </template>
+
+        {/* Snap points */}
+        <div slot="snap" style="--snap: 100%" class="top"></div>
+        <div slot="snap" style="--snap: 75%"></div>
+        <div slot="snap" style="--snap: 50%" class="initial"></div>
+        <div slot="snap" style="--snap: 25%"></div>
+
+        <div slot="footer">
+          <button id="add-block">Add block</button>
+          <button id="remove-block">Remove block</button>
+        </div>
+
+        <div id="content-container"></div>
+      </bottom-sheet>
+    </dialog>
+  </bottom-sheet-dialog-manager>
+</Layout>
+
+<style is:global>
+  bottom-sheet.example {
+    --sheet-max-height: 100vh;
+  }
+  bottom-sheet::part(header),
+  bottom-sheet::part(footer) {
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  bottom-sheet::part(header) {
+    height: 2.5vh;
+  }
+  bottom-sheet::part(footer) {
+    height: 7.5vh;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  bottom-sheet h2 {
+    margin: 0;
+    text-align: center;
+  }
+
+  #log {
+    height: 150px;
+    overflow: scroll;
+    padding: 0.5rem;
+    border: 1px solid black;
+    font-size: 0.8rem;
+  }
+
+  .content-block {
+    height: 10vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .content-block:nth-child(odd) {
+    background-color: #c0c0c0;
+  }
+
+  .content-block:nth-child(even) {
+    background-color: #e0e0e0;
+  }
+</style>
+
+<script>
+  import {
+    registerSheetElements,
+    type SnapPositionChangeEventDetail,
+  } from "pure-web-bottom-sheet";
+  registerSheetElements();
+
+  const openModalButton = document.getElementById("open-modal");
+  const dialog = document.querySelector<HTMLDialogElement>(
+    "dialog#bottom-sheet-dialog",
+  );
+  openModalButton?.addEventListener("click", () => {
+    dialog?.showModal();
+  });
+
+  const container = document.getElementById("content-container");
+  const addButton = document.getElementById("add-block");
+  const removeButton = document.getElementById("remove-block");
+
+  let blockCount = 0;
+
+  function createBlock() {
+    blockCount++;
+    const block = document.createElement("div");
+    block.className = "content-block";
+    block.textContent = `Block ${blockCount}`;
+    container?.appendChild(block);
+  }
+
+  addButton?.addEventListener("click", () => {
+    createBlock();
+  });
+
+  removeButton?.addEventListener("click", () => {
+    const lastBlock = container?.lastElementChild;
+    if (lastBlock) {
+      lastBlock.remove();
+    }
+  });
+
+  const logElement = document.getElementById("log");
+  const log = (message: string) => {
+    console.log(message);
+    if (logElement) {
+      logElement.textContent += message + "\n";
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+  };
+
+  dialog?.addEventListener("toggle", (e) => {
+    log(`Dialog toggled: ${e.newState}`);
+  });
+
+  const sheet = document.querySelector("bottom-sheet.example");
+  sheet?.addEventListener(
+    "snap-position-change",
+    (e: CustomEventInit<SnapPositionChangeEventDetail> & Event) => {
+      log(
+        `Snap position changed: index=${e.detail?.snapIndex}, state=${e.detail?.sheetState}`,
+      );
+    },
+  );
+</script>
