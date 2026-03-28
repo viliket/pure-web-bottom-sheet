@@ -50,12 +50,11 @@ const styles = css`
     top: calc(var(--snap) - 1px);
     margin-bottom: -1px; /* Compensate height so it does not affect layout */
     /*
-      The bottom sheet uses an IntersectionObserver as a fallback for browsers
-      that do not support the native scrollsnapchange event. The snap element
-      needs a bounding box that extends above the observer boundary (the scroll
-      container's top edge) so that these browsers reliably detect it as
-      intersecting when snapped. Without this, e.g., WebKit may report the element
-      as not-intersecting when it sits exactly at the boundary.
+      The bottom sheet uses an IntersectionObserver to dispatch custom snap-position-change
+      events. The snap element needs a bounding box that extends above the observer
+      boundary (the scroll container's top edge) so that these browsers reliably
+      detect it as intersecting when snapped. Without this, e.g., WebKit may report
+      the element as not-intersecting when it sits exactly at the boundary.
     */
     height: 1px;
   }
