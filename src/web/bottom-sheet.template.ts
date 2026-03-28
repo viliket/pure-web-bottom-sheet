@@ -50,12 +50,11 @@ const styles = css`
     top: calc(var(--snap) - 1px);
     margin-bottom: -1px; /* Compensate height so it does not affect layout */
     /*
-      The bottom sheet uses an IntersectionObserver as a fallback for browsers
-      that do not support the native scrollsnapchange event. The snap element
-      needs a bounding box that extends above the observer boundary (the scroll
-      container's top edge) so that these browsers reliably detect it as
-      intersecting when snapped. Without this, e.g., WebKit may report the element
-      as not-intersecting when it sits exactly at the boundary.
+      The bottom sheet uses an IntersectionObserver to dispatch custom snap-position-change
+      events. The snap element needs a bounding box that extends above the observer
+      boundary (the scroll container's top edge) so that these browsers reliably
+      detect it as intersecting when snapped. Without this, e.g., WebKit may report
+      the element as not-intersecting when it sits exactly at the boundary.
     */
     height: 1px;
   }
@@ -108,6 +107,17 @@ const styles = css`
     }
     &[data-snap="bottom"] {
       top: 1px;
+    }
+    &[data-snap="content-height"] {
+      position: absolute;
+      top: calc(
+        (var(--sheet-max-height) - min(100%, var(--sheet-max-height))) * -1 -
+          1px
+      );
+
+      :host(:not([content-height])) & {
+        display: none;
+      }
     }
   }
 
@@ -253,6 +263,16 @@ const styles = css`
 
     .sheet {
       min-height: 100%;
+    }
+  }
+
+  :host([content-height]) {
+    .sheet-wrapper {
+      /*
+        Needed to position the "content-height" sentinel at the correct position
+        relative to the sheet for accurate intersection observation.
+      */
+      position: relative;
     }
   }
 
@@ -457,6 +477,7 @@ export const template: string = /* HTML */ `
   <div class="snap snap-bottom" data-snap="bottom"></div>
   <div class="sentinel" data-snap="top"></div>
   <div class="sheet-wrapper">
+    <div class="sentinel" data-snap="content-height"></div>
     <aside class="sheet" part="sheet" data-snap="top">
       <header class="sheet-header" part="header">
         <div class="handle" part="handle"></div>
