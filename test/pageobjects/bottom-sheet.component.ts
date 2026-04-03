@@ -21,6 +21,14 @@ export default class BottomSheetComponent<
     return this.host.shadow$('[part="header"]');
   }
 
+  get content() {
+    return this.host.shadow$('[part="content"]');
+  }
+
+  get footer() {
+    return this.host.shadow$('[part="footer"]');
+  }
+
   get sheetSurface() {
     return this.host.shadow$('[part="sheet"]');
   }
