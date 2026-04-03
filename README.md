@@ -437,6 +437,13 @@ using the bottom sheet as an overlay that should always remain visible.
   > - the `<bottom-sheet>` is placed inside a `<dialog>` wrapped
   >   in `bottom-sheet-dialog-manager` element
   > - using the Popover API (`popover` attribute on the bottom-sheet).
+- **`mouse-drag`**  
+  Enables dragging the sheet with the mouse to scroll between snap points. Touch
+  input already scrolls natively and is unaffected by this attribute. The attribute
+  value controls which part of the sheet is draggable:
+  - No value / empty string (boolean attribute): drag from header and footer
+  - `"header"`: drag from header only
+  - `"sheet"`: drag from anywhere in the sheet
 
 #### Slots
 

@@ -24,7 +24,11 @@ declare var ScrollTimeline: {
  * }
  */
 export class BottomSheet extends HTMLElement {
-  static observedAttributes = ["nested-scroll-optimization", "content-height"];
+  static observedAttributes = [
+    "nested-scroll-optimization",
+    "content-height",
+    "mouse-drag",
+  ];
   #handleViewportResize = () => {
     this.style.setProperty(
       "--sw-keyboard-height",
@@ -35,6 +39,7 @@ export class BottomSheet extends HTMLElement {
   #cleanupIntersectionObserver: (() => void) | null = null;
   #cleanupSheetSizeObserver: (() => void) | null = null;
   #cleanupNestedScrollResizeOptimization: (() => void) | null = null;
+  #cleanupMouseDrag: (() => void) | null = null;
   #currentSnapState: {
     snapIndex: number;
     sheetState: SheetState;
@@ -359,6 +364,10 @@ export class BottomSheet extends HTMLElement {
     };
 
     const handleScrollEnd = () => {
+      // Skip during mouse drag because each programmatic scrollTop assignment
+      // triggers scrollend, which would clear data-scrolling prematurely.
+      if ("mouseDragging" in this.dataset) return;
+
       const style = getComputedStyle(content);
       const matrix = new DOMMatrixReadOnly(style.transform);
       const yOffset = -matrix.m42;
@@ -487,6 +496,87 @@ export class BottomSheet extends HTMLElement {
     };
   }
 
+  #setupMouseDrag() {
+    const sheet = this.#shadow.querySelector<HTMLElement>(".sheet");
+    if (!sheet) return;
+
+    const header = this.#shadow.querySelector<HTMLElement>(".sheet-header");
+    const footer = this.#shadow.querySelector<HTMLElement>(".sheet-footer");
+
+    const DRAG_THRESHOLD = 10;
+
+    let startY = 0;
+    let startScrollTop = 0;
+
+    const cleanupDrag = () => {
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerup", handlePointerUp);
+      delete this.dataset.mouseDragging;
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+
+      const dragMode = this.getAttribute("mouse-drag");
+      if (dragMode !== "sheet") {
+        const path = e.composedPath();
+        const targets = dragMode === "header" ? [header] : [header, footer];
+        if (!targets.some((el) => el && path.includes(el))) return;
+      }
+
+      startY = e.pageY;
+      startScrollTop = this.scrollTop;
+
+      document.addEventListener("pointermove", handlePointerMove);
+      document.addEventListener("pointerup", handlePointerUp);
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      if (!(e.buttons & 1)) {
+        cleanupDrag();
+        return;
+      }
+      const deltaY = e.pageY - startY;
+      if (!("mouseDragging" in this.dataset)) {
+        if (Math.abs(deltaY) < DRAG_THRESHOLD) return;
+        this.dataset.mouseDragging = "";
+        sheet.setPointerCapture(e.pointerId);
+      }
+      this.scrollTop = startScrollTop - deltaY;
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+
+      const shouldSuppressClick = "mouseDragging" in this.dataset;
+      cleanupDrag();
+
+      // Suppress the click that follows a drag. Needed for WebKit where
+      // pointer capture alone does not prevent clicks on the original target.
+      if (shouldSuppressClick) {
+        sheet.addEventListener(
+          "click",
+          (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          },
+          { capture: true, once: true },
+        );
+      }
+    };
+
+    sheet.addEventListener("pointerdown", handlePointerDown);
+    sheet.addEventListener("pointercancel", cleanupDrag);
+
+    this.#cleanupMouseDrag = () => {
+      sheet.removeEventListener("pointerdown", handlePointerDown);
+      sheet.removeEventListener("pointercancel", cleanupDrag);
+      cleanupDrag();
+      this.#cleanupMouseDrag = null;
+    };
+  }
+
   attributeChangedCallback(
     name: string,
     oldValue: string | null,
@@ -513,6 +603,15 @@ export class BottomSheet extends HTMLElement {
           }
         } else if (this.#cleanupSheetSizeObserver) {
           this.#cleanupSheetSizeObserver();
+        }
+        break;
+      case "mouse-drag":
+        if (newValue !== null) {
+          if (!this.#cleanupMouseDrag) {
+            this.#setupMouseDrag();
+          }
+        } else if (this.#cleanupMouseDrag) {
+          this.#cleanupMouseDrag();
         }
         break;
       default:
@@ -555,6 +654,15 @@ export interface BottomSheetHTMLAttributes {
    * with the `bottom-sheet-dialog-manager` or with the Popover API.
    */
   ["swipe-to-dismiss"]?: boolean;
+  /**
+   * When set, enables dragging the sheet with the mouse to scroll between snap
+   * points. Touch input already scrolls natively and is unaffected by this attribute.
+   *
+   * - No value (boolean): drag from header and footer
+   * - `"header"`: drag from header only
+   * - `"sheet"`: drag from anywhere in the sheet
+   */
+  ["mouse-drag"]?: boolean | "header" | "sheet";
 }
 
 /**
