@@ -1,0 +1,125 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DummyContent from "../components/DummyContent.astro";
+import { bottomSheetTemplate } from "pure-web-bottom-sheet/ssr";
+import SheetConfigPanel from "../components/SheetConfigPanel.astro";
+---
+
+<Layout>
+  <section>
+    <h1>Programmatic snapping with snapToPoint()</h1>
+    <p>
+      This example demonstrates the public <code
+        >snapToPoint(index: number)</code
+      >
+      method. The index follows the same convention as the
+      <code>snap-position-change</code> event's <code>snapIndex</code>: <code
+        >0</code
+      > is collapsed (only reachable when <code>swipe-to-dismiss</code> is set), and
+      the maximum index corresponds to the fully expanded state.
+    </p>
+    <p>
+      <label>
+        Scroll behavior:
+        <select id="behavior-select">
+          <option value="auto" selected>auto</option>
+          <option value="instant">instant</option>
+          <option value="smooth">smooth</option>
+        </select>
+      </label>
+    </p>
+    <p>
+      Current state: <code id="current-state">unknown</code>
+    </p>
+  </section>
+  <SheetConfigPanel bottomSheetSelector="bottom-sheet.example" />
+  <DummyContent />
+
+  <bottom-sheet class="example" tabindex="0">
+    <template shadowrootmode="open">
+      <Fragment set:html={bottomSheetTemplate} />
+    </template>
+
+    {/* Snap points */}
+    <div slot="snap" style="--snap: 75%"></div>
+    <div slot="snap" style="--snap: 50%" class="initial"></div>
+    <div slot="snap" style="--snap: 25%"></div>
+
+    <div slot="header">
+      <h2>snapToPoint example</h2>
+    </div>
+
+    <div slot="footer">
+      <small>Snap to point</small>
+      <button data-snap-index="1" title="25%">1</button>
+      <button data-snap-index="2" title="50%">2</button>
+      <button data-snap-index="3" title="75%">3</button>
+      <button data-snap-index="4" title="fully expanded">4</button>
+    </div>
+
+    <p>
+      Use the buttons in the footer to programmatically scroll the sheet to a
+      snap point. With three user-defined snap points (and no <code>.top</code> snap
+      point), the maximum expanded index is <code>4</code>, which corresponds to
+      the fully expanded state.
+    </p>
+    <details open>
+      <summary>Dummy content</summary>
+      <DummyContent />
+    </details>
+  </bottom-sheet>
+</Layout>
+
+<style>
+  bottom-sheet.example h2 {
+    margin: 0.5em 0;
+    text-align: center;
+  }
+
+  bottom-sheet.example [slot="footer"] {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+
+    small {
+      flex-basis: 100%;
+      text-align: center;
+    }
+  }
+</style>
+
+<script>
+  import {
+    BottomSheet,
+    type SnapPositionChangeEventDetail,
+  } from "pure-web-bottom-sheet";
+  customElements.define("bottom-sheet", BottomSheet);
+
+  const sheet = document.querySelector<BottomSheet>("bottom-sheet.example");
+  const behaviorSelect =
+    document.querySelector<HTMLSelectElement>("#behavior-select");
+  if (sheet) {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-snap-index]")
+      .forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = Number(button.dataset.snapIndex);
+          sheet.snapToPoint(index, {
+            behavior: behaviorSelect?.value as ScrollBehavior | undefined,
+          });
+        });
+      });
+
+    const stateEl = document.getElementById("current-state");
+    sheet.addEventListener(
+      "snap-position-change",
+      (e: CustomEventInit<SnapPositionChangeEventDetail> & Event) => {
+        if (stateEl && e.detail) {
+          stateEl.textContent = `snapIndex=${e.detail.snapIndex} state=${e.detail.sheetState}`;
+        }
+      },
+    );
+  }
+</script>

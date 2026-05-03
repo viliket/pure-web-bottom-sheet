@@ -1,3 +1,5 @@
+import type { BottomSheet } from "pure-web-bottom-sheet";
+
 export default class BottomSheetComponent<
   T extends Record<string, number> = Record<string, number>,
 > {
@@ -41,6 +43,18 @@ export default class BottomSheetComponent<
     await this.host.execute((el, scrollTop) => {
       el.scrollTop = scrollTop as number;
     }, targetScrollTop);
+  }
+
+  /** Calls `snapToPoint(index, { behavior })` on the bottom sheet host element. */
+  async callSnapToPoint(index: number, behavior?: ScrollBehavior) {
+    const host = await this.host.getElement();
+    return host.execute(
+      (el, i, b) => {
+        (el as BottomSheet).snapToPoint(i, b ? { behavior: b } : undefined);
+      },
+      index,
+      behavior,
+    );
   }
 
   /** Waits for all snap points to become active after the initial snap animation. */
