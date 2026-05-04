@@ -500,21 +500,22 @@ using the bottom sheet as an overlay that should always remain visible.
 #### Methods
 
 - **`snapToPoint(index: number, options?: { behavior?: ScrollBehavior }): void`**  
-  Scrolls the bottom sheet to the snap point at the given snap index. The index
-  follows the same convention as the `snapIndex` reported by the
-  `snap-position-change` event:
-  - `0` corresponds to the collapsed state (only reachable when the
-    `swipe-to-dismiss` attribute is set).
-  - Values from `1` up to the maximum expanded index correspond to the snap
-    points assigned to the `snap` slot, ordered from bottom to top.
-  - The maximum expanded index corresponds to the fully expanded state.
+  Scrolls the bottom sheet to the snap point at the given snap index, using
+  the same convention as the `snap-position-change` event's `snapIndex`.
+  Indices range from `0` (collapsed) to the maximum (fully expanded), with
+  intermediate values mapping to user-defined snap points in bottom-to-top
+  order.
+
+  If the index is not an integer or is out of range, does nothing. Otherwise,
+  the final position is determined by the browser's scroll-snap, so for
+  example index `0` without `swipe-to-dismiss` resolves to the bottommost
+  reachable snap point, and indices beyond the `content-height` limit resolve
+  to the topmost reachable snap.
 
   The `options.behavior` field maps directly to the `behavior` option of the
   underlying [`Element.scrollIntoView`](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView)
   call (`"auto"` | `"instant"` | `"smooth"`). When omitted, the browser default
   is used.
-
-  If the index is not an integer or is out of range, does nothing.
 
   When using the React or Vue wrapper, obtain a typed reference to the
   underlying element via the `BottomSheetElement` type re-exported from the

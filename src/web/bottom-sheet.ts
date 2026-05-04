@@ -76,17 +76,19 @@ export class BottomSheet extends HTMLElement {
   }
 
   /**
-   * Scrolls the bottom sheet to the snap point at the given snap index.
+   * Scrolls the bottom sheet to the snap point at the given snap index, using
+   * the same convention as the `snap-position-change` event's `snapIndex`.
+   * Indices range from `0` (collapsed) to the maximum (fully expanded), with
+   * intermediate values mapping to user-defined snap points in bottom-to-top
+   * order.
    *
    * If the index is not an integer or is out of range, does nothing.
+   * Otherwise, the final position is determined by the browser's scroll-snap,
+   * so for example index `0` without `swipe-to-dismiss` resolves to the
+   * bottommost reachable snap point, and indices beyond the `content-height`
+   * limit resolve to the topmost reachable snap.
    *
-   * @param index - The snap index to scroll to. Follows the same convention as
-   *   the `snap-position-change` event's `snapIndex`:
-   *   - `0` corresponds to the collapsed state (only reachable when
-   *     `swipe-to-dismiss` is set).
-   *   - Values from `1` up to the maximum expanded index correspond to the
-   *     snap points assigned to the `snap` slot, ordered from bottom to top.
-   *   - The maximum expanded index corresponds to the fully expanded state.
+   * @param index - The snap index to scroll to.
    * @param options - Options that control how the scroll is performed.
    */
   snapToPoint(index: number, options?: SnapToPointOptions) {
