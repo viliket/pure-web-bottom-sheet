@@ -1,10 +1,14 @@
-import { BottomSheet } from "pure-web-bottom-sheet/react";
+import {
+  BottomSheet,
+  type BottomSheetElement,
+} from "pure-web-bottom-sheet/react";
 import DummyContent from "../components/DummyContent";
 import "../app/global.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Page() {
   const [, setHasMounted] = useState(false);
+  const sheetRef = useRef<BottomSheetElement>(null);
 
   useEffect(() => {
     // Workaround for React 19 hydration bug: Forces a re-render after mount to ensure
@@ -22,6 +26,7 @@ export default function Page() {
       </section>
       <DummyContent />
       <BottomSheet
+        ref={sheetRef}
         tabIndex={0}
         onsnap-position-change={(e) =>
           console.log("Snap position changed:", e.detail)
@@ -33,8 +38,28 @@ export default function Page() {
         <div slot="header">
           <h2>Custom header</h2>
         </div>
-        <div slot="footer">
-          <h2>Custom footer</h2>
+        <div
+          slot="footer"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "0.5rem",
+            padding: "0.5rem",
+          }}
+        >
+          <small style={{ flexBasis: "100%", textAlign: "center" }}>
+            Snap to point
+          </small>
+          {[1, 2, 3, 4].map((index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => sheetRef.current?.snapToPoint(index)}
+            >
+              {index}
+            </button>
+          ))}
         </div>
 
         <DummyContent />

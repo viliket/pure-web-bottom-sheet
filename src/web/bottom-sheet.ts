@@ -75,6 +75,65 @@ export class BottomSheet extends HTMLElement {
     );
   }
 
+  /**
+   * Scrolls the bottom sheet to the snap point at the given snap index, using
+   * the same convention as the `snap-position-change` event's `snapIndex`.
+   * Indices range from `0` (collapsed) to the maximum (fully expanded), with
+   * intermediate values mapping to user-defined snap points in bottom-to-top
+   * order.
+   *
+   * If the index is not an integer or is out of range, does nothing.
+   * Otherwise, the final position is determined by the browser's scroll-snap,
+   * so for example index `0` without `swipe-to-dismiss` resolves to the
+   * bottommost reachable snap point, and indices beyond the `content-height`
+   * limit resolve to the topmost reachable snap.
+   *
+   * @param index - The snap index to scroll to.
+   * @param options - Options that control how the scroll is performed.
+   */
+  snapToPoint(index: number, options?: SnapToPointOptions) {
+    const snapPoints = this.#getSnapPoints();
+    if (!snapPoints) return;
+    const { assignedSnapPoints, maxExpandedIndex } = snapPoints;
+
+    if (!Number.isInteger(index) || index < 0 || index > maxExpandedIndex) {
+      return;
+    }
+
+    let target: Element | null;
+    if (index === maxExpandedIndex) {
+      target = this.#shadow.querySelector(".sheet");
+    } else if (index === 0) {
+      target = this.#shadow.querySelector(".snap-bottom");
+    } else {
+      target = assignedSnapPoints[index - 1] ?? null;
+    }
+
+    target?.scrollIntoView({ behavior: options?.behavior });
+  }
+
+  /**
+   * Returns the snap points assigned to the `snap` slot, ordered bottom-to-top
+   * so that array index maps to snap index (`i + 1`), along with the maximum
+   * expanded snap index. Returns `null` when the `snap` slot is missing.
+   */
+  #getSnapPoints(): {
+    assignedSnapPoints: Element[];
+    maxExpandedIndex: number;
+  } | null {
+    const snapSlot =
+      this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]');
+    if (!snapSlot) return null;
+
+    const assignedSnapPoints = snapSlot.assignedElements().reverse();
+    const hasTopSnapPoint =
+      assignedSnapPoints.at(-1)?.classList.contains("top") ?? false;
+    const maxExpandedIndex =
+      assignedSnapPoints.length + (hasTopSnapPoint ? 0 : 1);
+
+    return { assignedSnapPoints, maxExpandedIndex };
+  }
+
   #setupIntersectionObserver() {
     const snapSlot =
       this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]');
@@ -216,18 +275,9 @@ export class BottomSheet extends HTMLElement {
       return { snapIndex: 0, sheetState: "collapsed" };
     }
 
-    const snapSlot =
-      this.#shadow.querySelector<HTMLSlotElement>('slot[name="snap"]');
-    if (!snapSlot) return null;
-
-    // Reverse to bottom-to-top order so array index maps to snap index (i + 1)
-    const assignedSnapPoints = snapSlot.assignedElements().reverse();
-
-    const hasTopSnapPoint =
-      assignedSnapPoints.at(-1)?.classList.contains("top") ?? false;
-
-    const maxExpandedIndex =
-      assignedSnapPoints.length + (hasTopSnapPoint ? 0 : 1);
+    const snapPoints = this.#getSnapPoints();
+    if (!snapPoints) return null;
+    const { assignedSnapPoints, maxExpandedIndex } = snapPoints;
 
     // When content-height is set, the topmost reachable snap index may be
     // lower than maxExpandedIndex (limited by how tall the content is).
@@ -527,6 +577,19 @@ export class BottomSheet extends HTMLElement {
       this.#handleViewportResize,
     );
   }
+}
+
+/**
+ * Options for the {@link BottomSheet.snapToPoint} method.
+ */
+export interface SnapToPointOptions {
+  /**
+   * Determines whether scrolling is instant or animates smoothly. Maps directly
+   * to the `behavior` option of the underlying
+   * [`Element.scrollIntoView`](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView)
+   * call.
+   */
+  behavior?: ScrollBehavior;
 }
 
 export interface BottomSheetHTMLAttributes {

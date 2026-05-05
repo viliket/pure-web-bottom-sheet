@@ -7,6 +7,7 @@ export type {
   SheetState,
   SnapPositionChangeEventDetail,
   BottomSheetEvents,
+  SnapToPointOptions,
 } from "./bottom-sheet";
 
 export function registerSheetElements() {

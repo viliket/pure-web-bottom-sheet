@@ -3,6 +3,7 @@
     <h1>Non-dismissible bottom sheet</h1>
     <DummyContent />
     <VBottomSheet
+      ref="sheet"
       class="example"
       tabindex="0"
       @snap-position-change="callback"
@@ -13,7 +14,15 @@
         <h2>Custom header</h2>
       </div>
       <div slot="footer">
-        <h2>Custom footer</h2>
+        <small>Snap to point</small>
+        <button
+          v-for="index in [1, 2, 3, 4]"
+          :key="index"
+          type="button"
+          @click="sheet?.snapToPoint(index)"
+        >
+          {{ index }}
+        </button>
       </div>
       <div slot="snap" style="--snap: 75%"></div>
       <div slot="snap" style="--snap: 50%" class="initial"></div>
@@ -23,8 +32,14 @@
   </section>
 </template>
 <script setup lang="ts">
-import { VBottomSheet } from "pure-web-bottom-sheet/vue";
-import type { SnapPositionChangeEventDetail } from "pure-web-bottom-sheet";
+import { useTemplateRef } from "vue";
+import {
+  VBottomSheet,
+  type BottomSheetElement,
+  type SnapPositionChangeEventDetail,
+} from "pure-web-bottom-sheet/vue";
+
+const sheet = useTemplateRef<BottomSheetElement>("sheet");
 
 const callback = (event: CustomEvent<SnapPositionChangeEventDetail>) => {
   console.log("Snap position changed:", event.detail);
@@ -35,5 +50,18 @@ const callback = (event: CustomEvent<SnapPositionChangeEventDetail>) => {
 bottom-sheet.example h2 {
   margin: 0.5em 0;
   text-align: center;
+}
+
+bottom-sheet.example [slot="footer"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+
+  small {
+    flex-basis: 100%;
+    text-align: center;
+  }
 }
 </style>

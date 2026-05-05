@@ -1,4 +1,4 @@
-import { HTMLAttributes } from "vue";
+import { HTMLAttributes, PublicProps } from "vue";
 
 type CamelCase<S extends string> =
   S extends `${infer P1}-${infer P2}${infer P3}`
@@ -33,4 +33,5 @@ export type CustomElementProps<
   ElementEvents extends EventMap = {},
 > = KeysToCamelCase<ElementHTMLAttributes> &
   HTMLAttributes &
+  PublicProps &
   EventsToVueProps<ElementEvents>;

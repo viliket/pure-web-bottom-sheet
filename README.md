@@ -497,6 +497,66 @@ using the bottom sheet as an overlay that should always remain visible.
   - `"expanded"` - The bottom sheet is fully expanded (i.e., snapped to the full
     height).
 
+#### Methods
+
+- **`snapToPoint(index: number, options?: { behavior?: ScrollBehavior }): void`**  
+  Scrolls the bottom sheet to the snap point at the given snap index, using
+  the same convention as the `snap-position-change` event's `snapIndex`.
+  Indices range from `0` (collapsed) to the maximum (fully expanded), with
+  intermediate values mapping to user-defined snap points in bottom-to-top
+  order.
+
+  If the index is not an integer or is out of range, does nothing. Otherwise,
+  the final position is determined by the browser's scroll-snap, so for
+  example index `0` without `swipe-to-dismiss` resolves to the bottommost
+  reachable snap point, and indices beyond the `content-height` limit resolve
+  to the topmost reachable snap.
+
+  The `options.behavior` field maps directly to the `behavior` option of the
+  underlying [`Element.scrollIntoView`](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView)
+  call (`"auto"` | `"instant"` | `"smooth"`). When omitted, the browser default
+  is used.
+
+  When using the React or Vue wrapper, obtain a typed reference to the
+  underlying element via the `BottomSheetElement` type re-exported from the
+  framework subpath:
+
+  ```tsx
+  // React
+  import { useRef } from "react";
+  import {
+    BottomSheet,
+    type BottomSheetElement,
+  } from "pure-web-bottom-sheet/react";
+
+  function Example() {
+    const sheet = useRef<BottomSheetElement>(null);
+    return (
+      <BottomSheet ref={sheet}>
+        <button onClick={() => sheet.current?.snapToPoint(2)}>Snap to 2</button>
+      </BottomSheet>
+    );
+  }
+  ```
+
+  ```vue
+  <!-- Vue -->
+  <template>
+    <VBottomSheet ref="sheet">
+      <button @click="sheet?.snapToPoint(2)">Snap to 2</button>
+    </VBottomSheet>
+  </template>
+  <script setup lang="ts">
+  import { useTemplateRef } from "vue";
+  import {
+    VBottomSheet,
+    type BottomSheetElement,
+  } from "pure-web-bottom-sheet/vue";
+
+  const sheet = useTemplateRef<BottomSheetElement>("sheet");
+  </script>
+  ```
+
 ### `<bottom-sheet-dialog-manager>`: A utility element for the native `<dialog>` element to use the `<bottom-sheet>` element as a dialog
 
 The `<bottom-sheet-dialog-manager>` element is used when the bottom sheet should

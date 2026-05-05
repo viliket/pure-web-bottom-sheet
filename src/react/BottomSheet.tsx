@@ -1,4 +1,7 @@
-import { BottomSheetHTMLAttributes } from "../web/bottom-sheet";
+import {
+  BottomSheet as BottomSheetWebElement,
+  BottomSheetHTMLAttributes,
+} from "../web/bottom-sheet";
 import { BottomSheetEvents } from "../web/index.client";
 import { bottomSheetTemplate } from "../web/index.ssr";
 import Client from "./Client";
@@ -7,7 +10,8 @@ import ShadowRootTemplate from "./ShadowRootTemplate";
 
 type BottomSheetProps = CustomElementProps<
   BottomSheetHTMLAttributes,
-  BottomSheetEvents
+  BottomSheetEvents,
+  BottomSheetWebElement
 >;
 
 declare module "react/jsx-runtime" {

@@ -14,6 +14,7 @@ type EventsToReactProps<ElementEvents extends EventMap> = {
 export type CustomElementProps<
   ElementHTMLAttributes = {},
   ElementEvents extends EventMap = {},
-> = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> &
+  Element extends HTMLElement = HTMLElement,
+> = React.DetailedHTMLProps<React.HTMLAttributes<Element>, Element> &
   ElementHTMLAttributes &
   EventsToReactProps<ElementEvents>;
