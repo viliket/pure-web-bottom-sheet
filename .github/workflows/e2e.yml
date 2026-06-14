@@ -33,7 +33,9 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version-file: "package.json"
+          # Pin to Node 24 (LTS): WebdriverIO is broken on Node 26.
+          # Revert to node-version-file once webdriverio/webdriverio#15265 is fixed.
+          node-version: "24"
           check-latest: true
 
       - run: npm ci
