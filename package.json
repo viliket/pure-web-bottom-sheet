@@ -83,7 +83,6 @@
     "examples/*"
   ],
   "peerDependencies": {
-    "@vue/language-core": "~3.0.10",
     "react": "^19.0.0",
     "vue": "^3.0.0"
   },
@@ -92,6 +91,7 @@
     "@rollup/plugin-typescript": "^12.3.0",
     "@types/react": "^19.2.2",
     "@types/wait-on": "^5.3.4",
+    "@vue/language-core": "^3.3.9",
     "@wdio/cli": "^9.25.0",
     "@wdio/globals": "^9.23.0",
     "@wdio/local-runner": "^9.25.0",
