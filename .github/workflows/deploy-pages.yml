@@ -38,7 +38,7 @@ jobs:
           mkdir -p ./pages_dist/vue-nuxt
           cp -r examples/vue-nuxt/dist/* ./pages_dist/vue-nuxt/
 
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: ./pages_dist
 
