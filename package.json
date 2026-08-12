@@ -102,7 +102,7 @@
     "@wdio/spec-reporter": "^9.25.0",
     "cssnano": "^8.0.2",
     "htmlnano": "^3.4.0",
-    "postcss-nesting": "^13.0.2",
+    "postcss-nesting": "^14.0.1",
     "prettier": "^3.6.2",
     "prettier-plugin-css-order": "^2.1.2",
     "rollup": "^4.52.5",
