@@ -41,6 +41,12 @@ const { bottomSheetSelector = "bottom-sheet" } = Astro.props;
           nestedScrollOptimization: bottomSheet.hasAttribute(
             "nested-scroll-optimization",
           ),
+          mouseDrag: (() => {
+            const val = bottomSheet.getAttribute("mouse-drag");
+            if (val === null) return "off";
+            if (val === "" || val === "true") return "";
+            return val;
+          })(),
         };
 
         const pane = new Pane({
@@ -60,6 +66,15 @@ const { bottomSheetSelector = "bottom-sheet" } = Astro.props;
           label: "Content height",
         });
         pane.addBinding(params, "nestedScroll", { label: "Nested scroll" });
+        pane.addBinding(params, "mouseDrag", {
+          label: "Mouse drag",
+          options: {
+            Off: "off",
+            "Header + Footer": "",
+            "Header only": "header",
+            "Full sheet": "sheet",
+          },
+        });
 
         const nestedScrollFolder = pane.addFolder({
           title: "Options specific to nested scroll",
@@ -111,6 +126,12 @@ const { bottomSheetSelector = "bottom-sheet" } = Astro.props;
             if (enabled) bottomSheet.setAttribute(attr, "");
             else bottomSheet.removeAttribute(attr);
           });
+
+          if (params.mouseDrag === "off") {
+            bottomSheet.removeAttribute("mouse-drag");
+          } else {
+            bottomSheet.setAttribute("mouse-drag", params.mouseDrag);
+          }
 
           if (params.alwaysStopAtSnapPoints) {
             bottomSheet.classList.add("snap-stop-always");

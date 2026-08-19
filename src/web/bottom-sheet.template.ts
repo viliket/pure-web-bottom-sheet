@@ -276,6 +276,51 @@ const styles = css`
     }
   }
 
+  :host([mouse-drag]) {
+    scroll-behavior: smooth;
+
+    .sheet {
+      cursor: auto;
+    }
+
+    .sheet-header,
+    .sheet-footer {
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    &:host([mouse-drag="header"]) .sheet-footer {
+      cursor: auto;
+      user-select: auto;
+      -webkit-user-select: auto;
+    }
+
+    &:host([mouse-drag="sheet"]) .sheet {
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    &:host([data-mouse-dragging]) {
+      scroll-behavior: auto;
+      --snap-point-align: none;
+      user-select: none;
+      -webkit-user-select: none;
+
+      .snap.initial,
+      ::slotted([slot="snap"].initial) {
+        --snap-point-align: none;
+      }
+
+      .sheet,
+      .sheet-header,
+      .sheet-footer {
+        cursor: grabbing;
+      }
+    }
+  }
+
   :host([nested-scroll]) {
     .sheet-wrapper {
       display: flex;
