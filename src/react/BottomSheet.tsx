@@ -1,12 +1,12 @@
-import {
+import type {
   BottomSheet as BottomSheetWebElement,
   BottomSheetHTMLAttributes,
-} from "../web/bottom-sheet";
-import { BottomSheetEvents } from "../web/index.client";
-import { bottomSheetTemplate } from "../web/index.ssr";
-import Client from "./Client";
-import { CustomElementProps } from "./custom-element-props";
-import ShadowRootTemplate from "./ShadowRootTemplate";
+  BottomSheetEvents,
+} from "../web/index.client.js";
+import { bottomSheetTemplate } from "../web/index.ssr.js";
+import Client from "./Client.js";
+import { CustomElementProps } from "./custom-element-props.js";
+import ShadowRootTemplate from "./ShadowRootTemplate.js";
 
 type BottomSheetProps = CustomElementProps<
   BottomSheetHTMLAttributes,

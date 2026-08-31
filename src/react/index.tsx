@@ -1,5 +1,5 @@
-import BottomSheet from "./BottomSheet";
-import BottomSheetDialogManager from "./BottomSheetDialogManager";
+import BottomSheet from "./BottomSheet.js";
+import BottomSheetDialogManager from "./BottomSheetDialogManager.js";
 
 export { BottomSheet, BottomSheetDialogManager };
 
@@ -15,11 +15,11 @@ export { BottomSheet, BottomSheetDialogManager };
  * const ref = useRef<BottomSheetElement>(null);
  * ref.current?.snapToPoint(2);
  */
-export type { BottomSheet as BottomSheetElement } from "../web/bottom-sheet";
+export type { BottomSheet as BottomSheetElement } from "../web/index.client.js";
 
 export type {
   SheetState,
   SnapPositionChangeEventDetail,
   BottomSheetEvents,
   SnapToPointOptions,
-} from "../web/bottom-sheet";
+} from "../web/index.client.js";

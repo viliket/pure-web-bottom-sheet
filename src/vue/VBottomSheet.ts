@@ -1,12 +1,12 @@
 import { FunctionalComponent, h } from "vue";
 import ShadowRootTemplate from "./ShadowRootTemplate.vue";
-import {
+import type {
   BottomSheetEvents,
   BottomSheetHTMLAttributes,
-} from "../web/bottom-sheet";
-import { bottomSheetTemplate } from "../web/index.ssr";
+} from "../web/index.client.js";
+import { bottomSheetTemplate } from "../web/index.ssr.js";
 import Client from "./Client.vue";
-import { CustomElementProps } from "./custom-element-props";
+import { CustomElementProps } from "./custom-element-props.js";
 
 const VBottomSheet: FunctionalComponent<
   CustomElementProps<BottomSheetHTMLAttributes, BottomSheetEvents>
