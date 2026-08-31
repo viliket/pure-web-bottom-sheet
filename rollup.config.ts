@@ -1,98 +1,97 @@
-import typescript from "@rollup/plugin-typescript";
-import terser from "@rollup/plugin-terser";
+import path from "node:path";
+import minifyHTML from "@lit-labs/rollup-plugin-minify-html-literals";
+import { Features } from "lightningcss";
+import { defineConfig } from "rollup";
 import preserveDirectives from "rollup-preserve-directives";
-import minifyTemplateLiterals from "./scripts/rollup-plugin-minify-template-literals";
+import esbuild from "rollup-plugin-esbuild";
 import vue from "unplugin-vue/rollup";
 import dts from "unplugin-dts/rollup";
 
-import esbuild from "rollup-plugin-esbuild";
+const transpile = (minify = false) =>
+  esbuild({
+    target: "es2022",
+    format: "esm",
+    tsconfig: "tsconfig.json",
+    minify,
+  });
 
-export default [
+const minifyTemplates = () =>
+  minifyHTML({
+    failOnError: true,
+    options: {
+      minifyOptions: {
+        minifyCSS: {
+          include: Features.Nesting,
+        },
+      },
+    },
+  });
+
+const webSourceDir = path.join(import.meta.dirname, "src/web");
+const externalWebEntryPoints = new Set(["index.client", "index.ssr"]);
+
+const isWrapperExternal = (id: string, importer: string | undefined) => {
+  if (!id.startsWith(".") && !path.isAbsolute(id)) return true;
+  if (!importer) return false;
+
+  const resolvedPath = path.resolve(path.dirname(importer), id);
+  const { dir, name } = path.parse(resolvedPath);
+  return dir === webSourceDir && externalWebEntryPoints.has(name);
+};
+
+export default defineConfig([
   {
     input: "src/web/index.client.ts",
-    output: { file: "dist/web.client.js", format: "esm" },
+    output: { file: "dist/browser.min.js", format: "esm", sourcemap: true },
+    plugins: [minifyTemplates(), transpile(true)],
+  },
+  {
+    input: ["src/web/index.client.ts", "src/web/index.ssr.ts"],
+    output: { dir: "dist/web", format: "esm", sourcemap: true },
     plugins: [
-      typescript({
-        tsconfig: "./tsconfig.json",
-        exclude: ["rollup.config.ts"],
+      minifyTemplates(),
+      transpile(),
+      dts({
+        include: ["src/web/**/*.ts"],
+        entryRoot: "src/web",
+        outDirs: "dist/web",
       }),
-      minifyTemplateLiterals({
-        htmlnano: { collapseWhitespace: "aggressive", minifyCss: false },
-        cssnano: { preset: "default" },
-      }),
-      terser(),
     ],
   },
   {
-    input: "src/web/index.ssr.ts",
-    output: { file: "dist/web.ssr.js", format: "esm" },
-    plugins: [
-      typescript({
-        tsconfig: "./tsconfig.json",
-        exclude: ["rollup.config.ts"],
-      }),
-      minifyTemplateLiterals({
-        htmlnano: { collapseWhitespace: "aggressive", minifyCss: false },
-        cssnano: { preset: "default" },
-      }),
-      terser(),
-    ],
-  },
-  {
-    input: {
-      index: "src/react/index.tsx",
-    },
+    input: "src/react/index.tsx",
     output: {
       dir: "dist/react",
       format: "esm",
       sourcemap: true,
       preserveModules: true,
-      preserveModulesRoot: "src",
+      preserveModulesRoot: "src/react",
     },
-    external: ["react", "react-dom", "react/jsx-runtime"],
+    external: isWrapperExternal,
     plugins: [
-      typescript({
-        jsx: "react-jsx",
-        tsconfig: "./tsconfig.json",
-        exclude: ["rollup.config.ts", "src/vue/**"],
-        compilerOptions: {
-          outDir: "dist/react",
-        },
-      }),
-      minifyTemplateLiterals({
-        htmlnano: { collapseWhitespace: "aggressive", minifyCss: false },
-        cssnano: { preset: "default" },
-      }),
       preserveDirectives(),
+      transpile(),
+      dts({
+        include: ["src/react/**/*.ts", "src/react/**/*.tsx"],
+        entryRoot: "src/react",
+        outDirs: "dist/react",
+      }),
     ],
   },
   {
     input: "src/vue/index.ts",
-    output: {
-      dir: "dist/vue",
-      format: "esm",
-      sourcemap: true,
-    },
-    external: ["vue"],
+    output: { dir: "dist/vue", format: "esm", sourcemap: true },
+    external: isWrapperExternal,
     plugins: [
-      vue({
-        include: [/\.vue$/],
-      }),
-      esbuild({
-        target: "esnext",
-        sourceMap: true,
-        tsconfig: "tsconfig.json",
-      }),
+      vue(),
+      transpile(),
       dts({
         processor: "vue",
-        tsconfigPath: "./tsconfig.json",
-        exclude: ["rollup.config.ts"],
-      }),
-      minifyTemplateLiterals({
-        htmlnano: { collapseWhitespace: "aggressive", minifyCss: false },
-        cssnano: { preset: "default" },
-        postcssNesting: {},
+        include: ["src/vue/**/*.ts", "src/vue/**/*.vue"],
+        exclude: ["src/vue/shims-vue.d.ts"],
+        entryRoot: "src/vue",
+        outDirs: "dist/vue",
       }),
     ],
   },
-];
+]);

@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
-    "declaration": true,
-    "emitDeclarationOnly": true,
+    "noEmit": true,
     "jsx": "react-jsx",
     "module": "ESNext",
     "target": "ESNext",
@@ -13,5 +11,5 @@
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*", "rollup.config.ts"],
-  "exclude": ["node_modules", "dist", "examples", "scripts"]
+  "exclude": ["node_modules", "dist", "examples"]
 }

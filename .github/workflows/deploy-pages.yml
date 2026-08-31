@@ -18,7 +18,7 @@ jobs:
       - run: npm ci
 
       - name: Build package
-        run: npm run build:prod
+        run: npm run build
 
       - name: Build Astro examples
         run: npm run build -w examples/astro

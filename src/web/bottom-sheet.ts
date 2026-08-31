@@ -1,4 +1,4 @@
-import { template } from "./bottom-sheet.template";
+import { template } from "./bottom-sheet.template.js";
 
 /**
  * @see https://drafts.csswg.org/scroll-animations/#scrolltimeline-interface
