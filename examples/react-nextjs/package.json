@@ -7,13 +7,13 @@
     "export": "next export"
   },
   "dependencies": {
-    "next": "^16.3.0",
+    "next": "^16.3.3",
     "pure-web-bottom-sheet": "*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.4.0",
     "@types/react": "^19.2.7",
     "typescript": "^5.9.3"
   }
