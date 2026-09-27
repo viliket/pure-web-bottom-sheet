@@ -37,6 +37,10 @@ const browsers = new Map(
 );
 const headless = yn(process.env.CI) || yn(process.env.HEADLESS);
 
+const chromeVersion = browsers.get("chrome");
+const isChromeBefore128 =
+  !!chromeVersion && Number.parseInt(chromeVersion, 10) < 128;
+
 const viewportWidth = 1280;
 const viewportHeight = 800;
 
@@ -55,8 +59,10 @@ export const config: Options.Testrunner & {
   capabilities: [
     ...when<WebdriverIO.Capabilities>(browsers.has("chrome"), {
       browserName: "chrome",
-      browserVersion: browsers.get("chrome"),
-      webSocketUrl: true,
+      browserVersion: chromeVersion,
+      // Chrome < 128 BiDi emits navigationStarted without a navigation ID, so browser.url() times out
+      webSocketUrl: !isChromeBefore128,
+      "wdio:enforceWebDriverClassic": isChromeBefore128,
       "goog:chromeOptions": {
         args: [
           ...when(headless, "headless"),

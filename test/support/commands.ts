@@ -64,7 +64,7 @@ function clickAt(
   { x = 0, y = 0 }: Parameters<WebdriverIO.Browser["clickAt"]>[0],
 ) {
   return this.action("pointer")
-    .move({ x, y, origin: "viewport" })
+    .move({ x: Math.round(x), y: Math.round(y), origin: "viewport" })
     .down()
     .up()
     .perform();

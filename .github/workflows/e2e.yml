@@ -26,6 +26,11 @@ jobs:
             browser: minibrowser
           - os: macos-26
             browser: safari
+          # Minimum supported versions per browserslist configuration in package.json
+          - os: ubuntu-24.04
+            browser: chrome@121
+          - os: ubuntu-24.04
+            browser: firefox@stable_123.0
     runs-on: ${{ matrix.os }}
     name: E2E (${{ matrix.browser }} / ${{ matrix.os }})
     steps:

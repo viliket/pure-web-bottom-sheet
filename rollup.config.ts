@@ -1,6 +1,9 @@
 import path from "node:path";
 import minifyHTML from "@lit-labs/rollup-plugin-minify-html-literals";
-import { Features } from "lightningcss";
+import { defaultStrategy } from "@lit-labs/rollup-plugin-minify-html-literals/lib/strategy.js";
+import cssnano from "cssnano";
+import postcss from "postcss";
+import postcssNesting from "postcss-nesting";
 import { defineConfig } from "rollup";
 import preserveDirectives from "rollup-preserve-directives";
 import esbuild from "rollup-plugin-esbuild";
@@ -15,14 +18,19 @@ const transpile = (minify = false) =>
     minify,
   });
 
+const cssMinifier = postcss([postcssNesting(), cssnano()]);
+
 const minifyTemplates = () =>
   minifyHTML({
     failOnError: true,
     options: {
-      minifyOptions: {
-        minifyCSS: {
-          include: Features.Nesting,
-        },
+      strategy: {
+        ...defaultStrategy,
+        // Note: Using cssnano via postcss to minify CSS because Lightning CSS
+        // has some bugs making it unreliable.
+        // See e.g. https://github.com/parcel-bundler/lightningcss/issues/1342
+        minifyCSS: (css: string) =>
+          cssMinifier.process(css, { from: undefined }).css,
       },
     },
   });

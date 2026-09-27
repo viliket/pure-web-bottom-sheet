@@ -96,6 +96,10 @@ describe("Bottom sheet snapping", function () {
       // Only Chromium-based browsers seem to currently support touch emulation.
       this.skip();
     }
+    if (browser.capabilities.browserName === "chrome-headless-shell") {
+      // Old headless mode (headless Chrome < 128) applies less fling momentum than headed Chrome.
+      this.skip();
+    }
 
     await expect(sheet.host).toHaveScrollTopRelativeToHeight(snapPoints.P50);
     await sheet.waitForSnapPointsToActivate();
