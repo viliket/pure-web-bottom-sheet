@@ -37,9 +37,15 @@ const browsers = new Map(
 );
 const headless = yn(process.env.CI) || yn(process.env.HEADLESS);
 
+// Major version of a pinned version like "stable_123.0", or NaN for channels like "stable"
+const parseMajorVersion = (version?: string) =>
+  Number(version?.match(/\d+/)?.[0]);
+
 const chromeVersion = browsers.get("chrome");
-const isChromeBefore128 =
-  !!chromeVersion && Number.parseInt(chromeVersion, 10) < 128;
+// Chrome < 128 BiDi emits navigationStarted without a navigation ID, so browser.url() times out
+const chromeNeedsWebDriverClassic = parseMajorVersion(chromeVersion) < 128;
+
+const firefoxVersion = browsers.get("firefox");
 
 const viewportWidth = 1280;
 const viewportHeight = 800;
@@ -48,6 +54,12 @@ if (headless && browsers.has("firefox")) {
   // See https://firefox-source-docs.mozilla.org/remote/Testing.html
   process.env.MOZ_HEADLESS_WIDTH = `${viewportWidth}`;
   process.env.MOZ_HEADLESS_HEIGHT = `${viewportHeight}`;
+}
+
+if (parseMajorVersion(firefoxVersion) < 125) {
+  // Firefox < 124.0.1 tabs crash under Ubuntu 23.10+ AppArmor userns restriction
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1884347
+  process.env.MOZ_ASSUME_USER_NS = "0";
 }
 
 export const config: Options.Testrunner & {
@@ -60,9 +72,8 @@ export const config: Options.Testrunner & {
     ...when<WebdriverIO.Capabilities>(browsers.has("chrome"), {
       browserName: "chrome",
       browserVersion: chromeVersion,
-      // Chrome < 128 BiDi emits navigationStarted without a navigation ID, so browser.url() times out
-      webSocketUrl: !isChromeBefore128,
-      "wdio:enforceWebDriverClassic": isChromeBefore128,
+      webSocketUrl: !chromeNeedsWebDriverClassic,
+      "wdio:enforceWebDriverClassic": chromeNeedsWebDriverClassic,
       "goog:chromeOptions": {
         args: [
           ...when(headless, "headless"),
@@ -74,7 +85,7 @@ export const config: Options.Testrunner & {
     }),
     ...when<WebdriverIO.Capabilities>(browsers.has("firefox"), {
       browserName: "firefox",
-      browserVersion: browsers.get("firefox"),
+      browserVersion: firefoxVersion,
       webSocketUrl: true,
       "moz:firefoxOptions": {
         args: [...when(headless, "-headless")],
