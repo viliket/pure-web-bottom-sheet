@@ -1,5 +1,5 @@
-export { default as VBottomSheet } from "./VBottomSheet";
-export { default as VBottomSheetDialogManager } from "./VBottomSheetDialogManager";
+export { default as VBottomSheet } from "./VBottomSheet.js";
+export { default as VBottomSheetDialogManager } from "./VBottomSheetDialogManager.js";
 
 /**
  * Type alias for the underlying `BottomSheet` web component element. Use this
@@ -13,11 +13,11 @@ export { default as VBottomSheetDialogManager } from "./VBottomSheetDialogManage
  * const sheet = useTemplateRef<BottomSheetElement>("sheet");
  * sheet.value?.snapToPoint(2);
  */
-export type { BottomSheet as BottomSheetElement } from "../web/bottom-sheet";
+export type { BottomSheet as BottomSheetElement } from "../web/index.client.js";
 
 export type {
   SheetState,
   SnapPositionChangeEventDetail,
   BottomSheetEvents,
   SnapToPointOptions,
-} from "../web/bottom-sheet";
+} from "../web/index.client.js";

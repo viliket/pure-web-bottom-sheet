@@ -1,5 +1,4 @@
-/* Needed until Prettier supports identifying embedded CSS by block comments */
-const css = String.raw;
+import { css, html } from "./utils.js";
 
 const styles = css`
   :host {
@@ -466,7 +465,7 @@ const styles = css`
   }
 `;
 
-export const template: string = /* HTML */ `
+export const template: string = html`
   <style>
     ${styles}
   </style>

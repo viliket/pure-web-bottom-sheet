@@ -1,9 +1,9 @@
 import { FunctionalComponent, h } from "vue";
 import ShadowRootTemplate from "./ShadowRootTemplate.vue";
-import { BottomSheetEvents } from "../web/bottom-sheet";
-import { bottomSheetDialogManagerTemplate } from "../web/index.ssr";
+import type { BottomSheetEvents } from "../web/index.client.js";
+import { bottomSheetDialogManagerTemplate } from "../web/index.ssr.js";
 import Client from "./Client.vue";
-import { CustomElementProps } from "./custom-element-props";
+import { CustomElementProps } from "./custom-element-props.js";
 
 const VBottomSheetDialogManager: FunctionalComponent<
   CustomElementProps<{}, BottomSheetEvents>

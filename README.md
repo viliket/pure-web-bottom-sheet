@@ -76,7 +76,7 @@ npm install pure-web-bottom-sheet
     </bottom-sheet>
 
     <script type="module">
-      import { BottomSheet } from "https://unpkg.com/pure-web-bottom-sheet/pure-web-bottom-sheet";
+      import { BottomSheet } from "https://unpkg.com/pure-web-bottom-sheet";
       customElements.define("bottom-sheet", BottomSheet);
     </script>
   </body>
@@ -119,7 +119,7 @@ npm install pure-web-bottom-sheet
     <button id="show-button">Open bottom sheet</button>
 
     <script type="module">
-      import { registerSheetElements } from "https://unpkg.com/pure-web-bottom-sheet/pure-web-bottom-sheet";
+      import { registerSheetElements } from "https://unpkg.com/pure-web-bottom-sheet";
       registerSheetElements();
 
       document.getElementById("show-button").addEventListener("click", () => {
@@ -615,6 +615,17 @@ Here are the relevant CSS selectors for the sheet customization:
 - **`bottom-sheet::part(content)`**
 - **`bottom-sheet::part(header)`**
 - **`bottom-sheet::part(footer)`**
+
+## 🌐 Browser support
+
+The minimum supported browser versions are listed in the `browserslist` field of
+[package.json](package.json). They were derived with:
+
+```sh
+npx browserslist --mobile-to-desktop "baseline widely available on 2026-09-01, not safari < 18.2, not ios_saf < 18.2"
+```
+
+Safari 18.2+ is currently required because the bottom sheet's "initial scroll snap" functionality on Safari depends on `scroll-snap-*` properties supporting discrete animations, a feature introduced in [Safari 18.2](https://developer.apple.com/documentation/safari-release-notes/safari-18_2-release-notes#Web-Animations), which was released in December 2024 ([Baseline 2024](https://web.dev/baseline/2024)).
 
 ## 🤝 Contributing
 

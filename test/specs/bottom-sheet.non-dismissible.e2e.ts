@@ -27,7 +27,7 @@ describe("Non-dismissible bottom sheet", function () {
   });
 
   it("should not close when clicking outside the sheet", async function () {
-    const sheetSurfaceY = await sheet.sheetSurface.getLocation("y");
+    const sheetSurfaceY = Math.round(await sheet.sheetSurface.getLocation("y"));
     const sheetSurfaceHalfWidth =
       (await sheet.sheetSurface.getSize("width")) / 2;
 
@@ -67,8 +67,8 @@ describe("Non-dismissible bottom sheet", function () {
     await browser
       .action("pointer")
       .move({
-        x: (await sheet.sheetSurface.getSize("width")) / 2,
-        y: (await sheet.sheetSurface.getLocation("y")) - 1,
+        x: Math.round((await sheet.sheetSurface.getSize("width")) / 2),
+        y: Math.round(await sheet.sheetSurface.getLocation("y")) - 1,
       })
       .perform();
 

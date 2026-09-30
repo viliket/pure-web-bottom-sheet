@@ -1,8 +1,8 @@
-import { BottomSheetEvents } from "../web/bottom-sheet";
-import { bottomSheetDialogManagerTemplate } from "../web/index.ssr";
-import Client from "./Client";
-import { CustomElementProps } from "./custom-element-props";
-import ShadowRootTemplate from "./ShadowRootTemplate";
+import type { BottomSheetEvents } from "../web/index.client.js";
+import { bottomSheetDialogManagerTemplate } from "../web/index.ssr.js";
+import Client from "./Client.js";
+import { CustomElementProps } from "./custom-element-props.js";
+import ShadowRootTemplate from "./ShadowRootTemplate.js";
 
 type BottomSheetDialogManagerProps = CustomElementProps<{}, BottomSheetEvents>;
 

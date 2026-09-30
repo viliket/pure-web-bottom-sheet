@@ -50,8 +50,7 @@ Pull requests are welcome! **For significant changes, please first create an iss
 
 ### Building
 
-- Development: `npm run build`
-- Production: `npm run build:prod`
+Run the production build with `npm run build`.
 
 ### Running examples
 
