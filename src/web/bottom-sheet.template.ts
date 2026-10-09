@@ -257,10 +257,14 @@ const styles = css`
 
       &::after {
         display: block;
+        position: relative;
+        left: 100%;
         box-sizing: content-box;
         padding: inherit;
+        padding-top: 0;
+        padding-bottom: 0;
         padding-left: 0;
-        width: calc(100% + 1px);
+        width: 1px;
         height: 1px;
         content: "";
       }
