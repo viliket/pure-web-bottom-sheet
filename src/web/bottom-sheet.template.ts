@@ -198,6 +198,21 @@ const styles = css`
   }
 
   /*
+    iOS Safari 26+ fills the area behind its floating toolbar with the color of
+    the fixed element at the viewport edge (https://commits.webkit.org/292308@main)
+    but skips scrollers without a background (https://commits.webkit.org/293390@main).
+    A transparent image counts as a background, and the zero size keeps it from
+    being painted. The animation-timeline check limits this to iOS 26+.
+  */
+  @supports (-webkit-touch-callout: none) and (animation-timeline: scroll()) {
+    :host(:not([data-sheet-state="collapsed"])) {
+      background-image: linear-gradient(transparent, transparent);
+      background-size: 0 0;
+      background-repeat: no-repeat;
+    }
+  }
+
+  /*
     Temporarily disables scroll snapping for all snap points
     except the explicitly marked initial snap point (which overrides
     --snap-point-align) so that the sheet snaps to
