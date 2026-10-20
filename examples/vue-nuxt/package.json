@@ -10,9 +10,9 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "nuxt": "^4.5.2",
+    "nuxt": "^4.6.2",
     "pure-web-bottom-sheet": "*",
-    "vue": "^3.5.43",
+    "vue": "^3.5.44",
     "vue-router": "^5.3.1"
   }
 }
