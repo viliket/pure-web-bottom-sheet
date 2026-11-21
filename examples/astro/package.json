@@ -16,6 +16,6 @@
   "devDependencies": {
     "@tweakpane/core": "^2.0.5",
     "prettier": "^3.6.2",
-    "prettier-plugin-astro": "0.14.1"
+    "prettier-plugin-astro": "1.1.0"
   }
 }
